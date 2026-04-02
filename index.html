@@ -175,7 +175,10 @@
   .year-chart-count { font-size: 11px; color: #7c3aed; font-weight: 700; }
   .year-grid { display: grid; grid-template-columns: repeat(52, 1fr); grid-template-rows: repeat(7, 1fr); gap: 2px; }
   .year-cell { aspect-ratio: 1; border-radius: 2px; background: #f0eeff; }
-  .year-cell.done { background: #7c3aed; }
+  .year-cell.l1 { background: #ddd6fe; }
+  .year-cell.l2 { background: #a78bfa; }
+  .year-cell.l3 { background: #7c3aed; }
+  .year-cell.l4 { background: #4c1d95; }
   .year-cell.today { outline: 2px solid #f59e0b; outline-offset: 0px; }
 
   /* Empty */
@@ -699,11 +702,20 @@ function renderWorkoutMiniChart(workoutId, completions) {
   const totalYear = doneSet.size;
   const totalDays = 52 * 7; // 364 days
 
+  // count done days per week to determine shade level
+  const weekCounts = Array.from({length: 52}, (_, wi) =>
+    Array.from({length: 7}, (_, di) => daysAgo(totalDays - 1 - (wi * 7 + di)))
+      .filter(d => doneSet.has(d)).length
+  );
+
   const cells = Array.from({length: totalDays}, (_, i) => {
     const date = daysAgo(totalDays - 1 - i);
     const done = doneSet.has(date);
     const isToday = date === todayStr;
-    return `<div class="year-cell${done ? ' done' : ''}${isToday ? ' today' : ''}" title="${date}"></div>`;
+    const week = Math.floor(i / 7);
+    const wc = weekCounts[week];
+    const level = !done ? '' : wc >= 6 ? ' l4' : wc >= 4 ? ' l3' : wc >= 2 ? ' l2' : ' l1';
+    return `<div class="year-cell${level}${isToday ? ' today' : ''}" title="${date}"></div>`;
   }).join('');
 
   return `<div class="year-chart">
