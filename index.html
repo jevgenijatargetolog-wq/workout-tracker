@@ -145,6 +145,23 @@
   .yt-iframe-wrap { position: relative; padding-bottom: 56.25%; height: 0; border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
   .yt-iframe-wrap iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
 
+  /* Category sections */
+  .cat-section { margin-bottom: 10px; }
+  .cat-header { display: flex; align-items: center; gap: 10px; padding: 13px 16px; border-radius: 14px; cursor: pointer; user-select: none; transition: all 0.2s; }
+  .cat-header:hover { filter: brightness(0.97); }
+  .cat-icon { font-size: 22px; }
+  .cat-name { font-size: 15px; font-weight: 700; flex: 1; }
+  .cat-count { font-size: 12px; font-weight: 600; opacity: 0.65; }
+  .cat-chevron { font-size: 12px; transition: transform 0.25s; opacity: 0.5; }
+  .cat-section.open .cat-chevron { transform: rotate(90deg); }
+  .cat-body { display: none; padding-top: 6px; }
+  .cat-section.open .cat-body { display: block; }
+
+  /* Recipe cards */
+  .recipe-card { background: white; border-radius: 14px; padding: 15px; margin-bottom: 8px; box-shadow: 0 2px 8px rgba(124,58,237,0.07); }
+  .recipe-section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #aaa; margin: 10px 0 4px; }
+  .recipe-body { font-size: 13px; color: #555; line-height: 1.6; white-space: pre-wrap; }
+
   /* Empty */
   .empty { text-align: center; padding: 36px 20px; color: #bbb; }
   .empty-icon { font-size: 36px; margin-bottom: 8px; }
@@ -163,6 +180,7 @@
   <h1>💪 Мои тренировки <span class="sync-dot" id="sync-dot"></span><span class="sync-label" id="sync-label">подключение...</span></h1>
   <div class="tabs">
     <button class="tab active" onclick="showTab('workouts', this)">🏋️ Тренировки</button>
+    <button class="tab" onclick="showTab('recipes', this)">🍽️ Рецепты</button>
     <button class="tab" onclick="showTab('steps', this)">🚶 Ходьба</button>
     <button class="tab" onclick="showTab('weight', this)">⚖️ Вес</button>
     <button class="tab" onclick="showTab('progress', this)">📊 Прогресс</button>
@@ -184,20 +202,21 @@
           <label>Название</label>
           <input type="text" id="f-name" placeholder="Например: Йога для спины" />
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Тип</label>
-            <select id="f-type">
-              <option value="strength">💪 Силовая</option>
-              <option value="yoga">🧘 Йога / растяжка</option>
-              <option value="walk">🚶 Ходьба</option>
-              <option value="other">⭐ Другое</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Длительность (мин)</label>
-            <input type="number" id="f-duration" placeholder="30" min="1" />
-          </div>
+        <div class="form-group">
+          <label>Раздел</label>
+          <select id="f-category">
+            <option value="morning">🌅 Зарядка</option>
+            <option value="abs">🔥 Упражнения на пресс</option>
+            <option value="rest">🧘 Тренировка · Отдых</option>
+            <option value="period">🌸 В критические дни</option>
+            <option value="face">✨ Массаж лица</option>
+            <option value="strength">💪 Силовые тренировки</option>
+            <option value="aerobic">🏃 Аэробные тренировки</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Длительность (мин)</label>
+          <input type="number" id="f-duration" placeholder="30" min="1" />
         </div>
         <div class="form-group">
           <label>Ссылка (YouTube или Google Drive)</label>
@@ -214,6 +233,57 @@
       </div>
     </div>
     <div id="workouts-list"></div>
+  </div>
+
+  <!-- ===== RECIPES ===== -->
+  <div id="tab-recipes" class="section">
+    <br>
+    <button class="toggle-form-btn" onclick="toggleRecipeForm()" id="toggle-recipe-btn">+ Добавить рецепт</button>
+    <div id="add-recipe-form" style="display:none">
+      <div class="form-card">
+        <h3>Новый рецепт</h3>
+        <div class="form-group">
+          <label>Название блюда</label>
+          <input type="text" id="r-name" placeholder="Например: Овсянка с ягодами" />
+        </div>
+        <div class="form-group">
+          <label>Раздел</label>
+          <select id="r-category">
+            <option value="breakfast">🌄 Завтрак</option>
+            <option value="lunch">🥗 Обед</option>
+            <option value="dinner">🍽️ Ужин</option>
+            <option value="snack">🍎 Перекусы</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Ингредиенты</label>
+          <textarea id="r-ingredients" placeholder="— 100г овсянки&#10;— 200мл молока&#10;— горсть ягод"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Приготовление</label>
+          <textarea id="r-steps" placeholder="1. Залить овсянку молоком..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Калории (ккал)</label>
+            <input type="number" id="r-calories" placeholder="350" min="0" />
+          </div>
+          <div class="form-group">
+            <label>Время (мин)</label>
+            <input type="number" id="r-time" placeholder="15" min="0" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Заметки / источник</label>
+          <textarea id="r-notes" placeholder="Ссылка на рецепт или заметка..."></textarea>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-primary" onclick="saveRecipe()" style="flex:1">Сохранить</button>
+          <button class="btn btn-link" onclick="toggleRecipeForm()">Отмена</button>
+        </div>
+      </div>
+    </div>
+    <div id="recipes-list"></div>
   </div>
 
   <!-- ===== STEPS ===== -->
@@ -374,8 +444,27 @@ function initData() {
   if (!d.steps)       d.steps = [];
   if (!d.stepGoal)    d.stepGoal = 10000;
   if (!d.weight)      d.weight = [];
+  if (!d.recipes)     d.recipes = [];
   return d;
 }
+
+// ─── Categories ────────────────────────────────────────────────────────────
+const WORKOUT_CATS = [
+  { id: 'morning',  label: 'Зарядка',                icon: '🌅', bg: '#fef9c3', border: '#fde047' },
+  { id: 'abs',      label: 'Упражнения на пресс',    icon: '🔥', bg: '#fff7ed', border: '#fb923c' },
+  { id: 'rest',     label: 'Тренировка · Отдых',     icon: '🧘', bg: '#f0fdf4', border: '#4ade80' },
+  { id: 'period',   label: 'В критические дни',      icon: '🌸', bg: '#fdf2f8', border: '#e879f9' },
+  { id: 'face',     label: 'Массаж лица',            icon: '✨', bg: '#f5f3ff', border: '#a78bfa' },
+  { id: 'strength', label: 'Силовые тренировки',     icon: '💪', bg: '#eff6ff', border: '#60a5fa' },
+  { id: 'aerobic',  label: 'Аэробные тренировки',    icon: '🏃', bg: '#ecfdf5', border: '#34d399' },
+];
+
+const RECIPE_CATS = [
+  { id: 'breakfast', label: 'Завтрак',  icon: '🌄', bg: '#fef9c3', border: '#fde047' },
+  { id: 'lunch',     label: 'Обед',     icon: '🥗', bg: '#f0fdf4', border: '#4ade80' },
+  { id: 'dinner',    label: 'Ужин',     icon: '🍽️', bg: '#eff6ff', border: '#60a5fa' },
+  { id: 'snack',     label: 'Перекусы', icon: '🍎', bg: '#fff7ed', border: '#fb923c' },
+];
 
 // ─── Real-time listener ────────────────────────────────────────────────────
 DATA_REF.on('value', (snapshot) => {
@@ -393,6 +482,7 @@ function refreshCurrentTab() {
   if (!active) return;
   const id = active.id;
   if (id === 'tab-workouts') renderWorkouts();
+  if (id === 'tab-recipes')  renderRecipes();
   if (id === 'tab-steps')    renderSteps();
   if (id === 'tab-weight')   renderWeight();
   if (id === 'tab-progress') renderProgress();
@@ -538,24 +628,42 @@ function renderWorkouts() {
     list.innerHTML = `<div class="empty"><div class="empty-icon">🏋️</div><p>Добавьте первую тренировку</p></div>`;
     return;
   }
-  list.innerHTML = d.workouts.map(w => {
-    const isDone = d.completions.some(c => c.workoutId === w.id && c.date === todayStr);
-    return `<div class="card ${isDone ? 'done-today' : ''}" id="wcard-${w.id}">
-      <div class="card-title">${escHtml(w.name)}</div>
-      <div class="card-meta">
-        ${typeBadge(w.type)}
-        ${w.duration ? `<span>⏱ ${w.duration} мин</span>` : ''}
-        ${isDone ? '<span class="done-badge">✓ Выполнено сегодня</span>' : ''}
+  list.innerHTML = WORKOUT_CATS.map(cat => {
+    const catWorkouts = d.workouts.filter(w => (w.category || w.type || 'strength') === cat.id);
+    if (!catWorkouts.length) return '';
+    const doneCount = catWorkouts.filter(w => d.completions.some(c => c.workoutId === w.id && c.date === todayStr)).length;
+    const cards = catWorkouts.map(w => {
+      const isDone = d.completions.some(c => c.workoutId === w.id && c.date === todayStr);
+      return `<div class="card ${isDone ? 'done-today' : ''}" id="wcard-${w.id}">
+        <div class="card-title">${escHtml(w.name)}</div>
+        <div class="card-meta">
+          ${w.duration ? `<span>⏱ ${w.duration} мин</span>` : ''}
+          ${isDone ? '<span class="done-badge">✓ Выполнено сегодня</span>' : ''}
+        </div>
+        ${w.notes ? `<div style="font-size:13px;color:#666;margin-bottom:10px">${escHtml(w.notes)}</div>` : ''}
+        <div class="card-actions">
+          ${isDone ? `<button class="btn btn-done">✓ Выполнено</button>`
+                   : `<button class="btn btn-success" onclick="markDone('${w.id}')">✓ Выполнено</button>`}
+          ${renderMediaBtn(w.url)}
+          <button class="btn btn-danger" onclick="deleteWorkout('${w.id}')">🗑</button>
+        </div>
+      </div>`;
+    }).join('');
+    const countLabel = doneCount > 0 ? `${doneCount}/${catWorkouts.length}` : `${catWorkouts.length}`;
+    return `<div class="cat-section open" id="cat-${cat.id}">
+      <div class="cat-header" style="background:${cat.bg};border-left:4px solid ${cat.border}" onclick="toggleCat('${cat.id}')">
+        <span class="cat-icon">${cat.icon}</span>
+        <span class="cat-name">${cat.label}</span>
+        <span class="cat-count">${countLabel}</span>
+        <span class="cat-chevron">▶</span>
       </div>
-      ${w.notes ? `<div style="font-size:13px;color:#666;margin-bottom:10px">${escHtml(w.notes)}</div>` : ''}
-      <div class="card-actions">
-        ${isDone ? `<button class="btn btn-done">✓ Выполнено</button>`
-                 : `<button class="btn btn-success" onclick="markDone('${w.id}')">✓ Выполнено</button>`}
-        ${renderMediaBtn(w.url)}
-        <button class="btn btn-danger" onclick="deleteWorkout('${w.id}')">🗑</button>
-      </div>
+      <div class="cat-body">${cards}</div>
     </div>`;
   }).join('');
+}
+
+function toggleCat(id) {
+  document.getElementById('cat-' + id).classList.toggle('open');
 }
 
 function markDone(id) {
@@ -580,13 +688,16 @@ function saveWorkout() {
   const name = document.getElementById('f-name').value.trim();
   if (!name) { alert('Введите название'); return; }
   const d = initData();
-  d.workouts.push({ id: uid(), name, type: document.getElementById('f-type').value,
+  d.workouts.push({
+    id: uid(), name,
+    category: document.getElementById('f-category').value,
     duration: parseInt(document.getElementById('f-duration').value) || 0,
     url: document.getElementById('f-url').value.trim(),
-    notes: document.getElementById('f-notes').value.trim() });
+    notes: document.getElementById('f-notes').value.trim()
+  });
   setData(d);
   ['f-name','f-duration','f-url','f-notes'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('f-type').value = 'strength';
+  document.getElementById('f-category').value = 'morning';
   toggleAddForm();
   renderWorkouts();
 }
@@ -597,6 +708,83 @@ function toggleAddForm() {
   const show = form.style.display === 'none';
   form.style.display = show ? 'block' : 'none';
   btn.textContent = show ? '✕ Скрыть форму' : '+ Добавить тренировку';
+}
+
+// ─── Recipes ────────────────────────────────────────────────────────────────
+function renderRecipes() {
+  const d = initData();
+  const list = document.getElementById('recipes-list');
+  if (!d.recipes.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">🍽️</div><p>Добавьте первый рецепт</p></div>`;
+    return;
+  }
+  list.innerHTML = RECIPE_CATS.map(cat => {
+    const catRecipes = d.recipes.filter(r => r.category === cat.id);
+    if (!catRecipes.length) return '';
+    const cards = catRecipes.map(r => `
+      <div class="recipe-card">
+        <div class="card-title">${escHtml(r.name)}</div>
+        <div class="card-meta">
+          ${r.calories ? `<span>🔥 ${r.calories} ккал</span>` : ''}
+          ${r.time ? `<span>⏱ ${r.time} мин</span>` : ''}
+        </div>
+        ${r.ingredients ? `<div class="recipe-section-label">Ингредиенты</div><div class="recipe-body">${escHtml(r.ingredients)}</div>` : ''}
+        ${r.steps ? `<div class="recipe-section-label">Приготовление</div><div class="recipe-body">${escHtml(r.steps)}</div>` : ''}
+        ${r.notes ? `<div class="recipe-section-label">Заметки</div><div class="recipe-body">${escHtml(r.notes)}</div>` : ''}
+        <div class="card-actions" style="margin-top:10px">
+          <button class="btn btn-danger" onclick="deleteRecipe('${r.id}')">🗑 Удалить</button>
+        </div>
+      </div>`).join('');
+    return `<div class="cat-section open" id="rcat-${cat.id}">
+      <div class="cat-header" style="background:${cat.bg};border-left:4px solid ${cat.border}" onclick="toggleRcat('${cat.id}')">
+        <span class="cat-icon">${cat.icon}</span>
+        <span class="cat-name">${cat.label}</span>
+        <span class="cat-count">${catRecipes.length}</span>
+        <span class="cat-chevron">▶</span>
+      </div>
+      <div class="cat-body">${cards}</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleRcat(id) {
+  document.getElementById('rcat-' + id).classList.toggle('open');
+}
+
+function saveRecipe() {
+  const name = document.getElementById('r-name').value.trim();
+  if (!name) { alert('Введите название блюда'); return; }
+  const d = initData();
+  d.recipes.push({
+    id: uid(), name,
+    category:    document.getElementById('r-category').value,
+    ingredients: document.getElementById('r-ingredients').value.trim(),
+    steps:       document.getElementById('r-steps').value.trim(),
+    calories:    parseInt(document.getElementById('r-calories').value) || 0,
+    time:        parseInt(document.getElementById('r-time').value) || 0,
+    notes:       document.getElementById('r-notes').value.trim(),
+  });
+  setData(d);
+  ['r-name','r-ingredients','r-steps','r-calories','r-time','r-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('r-category').value = 'breakfast';
+  toggleRecipeForm();
+  renderRecipes();
+}
+
+function deleteRecipe(id) {
+  if (!confirm('Удалить рецепт?')) return;
+  const d = initData();
+  d.recipes = d.recipes.filter(r => r.id !== id);
+  setData(d);
+  renderRecipes();
+}
+
+function toggleRecipeForm() {
+  const form = document.getElementById('add-recipe-form');
+  const btn  = document.getElementById('toggle-recipe-btn');
+  const show = form.style.display === 'none';
+  form.style.display = show ? 'block' : 'none';
+  btn.textContent = show ? '✕ Скрыть форму' : '+ Добавить рецепт';
 }
 
 // ─── Steps ──────────────────────────────────────────────────────────────────
@@ -951,6 +1139,7 @@ function showTab(name, tabEl) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
   if (tabEl) tabEl.classList.add('active');
+  if (name === 'recipes')  renderRecipes();
   if (name === 'steps')    renderSteps();
   if (name === 'weight')   renderWeight();
   if (name === 'progress') renderProgress();
