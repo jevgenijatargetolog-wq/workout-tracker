@@ -168,13 +168,15 @@
   .recipe-section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #aaa; margin: 10px 0 4px; }
   .recipe-body { font-size: 13px; color: #555; line-height: 1.6; white-space: pre-wrap; }
 
-  /* Year curve chart */
+  /* Year grid chart */
   .year-chart { margin-top: 12px; padding-top: 10px; border-top: 1px solid #f3f4f6; }
   .year-chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
   .year-chart-label { font-size: 11px; color: #aaa; font-weight: 600; }
   .year-chart-count { font-size: 11px; color: #7c3aed; font-weight: 700; }
-  .year-chart svg { width: 100%; height: 60px; display: block; overflow: visible; }
-  .year-chart-cat { font-size: 18px; filter: drop-shadow(0 1px 2px rgba(0,0,0,.2)); transition: all 0.4s ease; }
+  .year-grid { display: grid; grid-template-columns: repeat(52, 1fr); grid-template-rows: repeat(7, 1fr); gap: 2px; }
+  .year-cell { aspect-ratio: 1; border-radius: 2px; background: #f0eeff; }
+  .year-cell.done { background: #7c3aed; }
+  .year-cell.today { outline: 2px solid #f59e0b; outline-offset: 0px; }
 
   /* Empty */
   .empty { text-align: center; padding: 36px 20px; color: #bbb; }
@@ -695,67 +697,21 @@ function renderWorkoutMiniChart(workoutId, completions) {
 
   const todayStr = today();
   const totalYear = doneSet.size;
+  const totalDays = 52 * 7; // 364 days
 
-  // Build 52 weekly buckets (364 days back + today)
-  const weeks = 52;
-  const buckets = Array.from({length: weeks}, (_, wi) => {
-    let count = 0;
-    for (let d = 0; d < 7; d++) {
-      const dayIndex = (weeks - 1 - wi) * 7 + (6 - d);
-      count += doneSet.has(daysAgo(dayIndex)) ? 1 : 0;
-    }
-    return count;
-  });
-
-  const W = 300, H = 50;
-  const maxVal = Math.max(...buckets, 1);
-  // smooth curve via cardinal spline
-  const pts = buckets.map((v, i) => [
-    (i / (weeks - 1)) * W,
-    H - 4 - (v / maxVal) * (H - 10)
-  ]);
-
-  function catmullRom(points) {
-    if (points.length < 2) return '';
-    let d = `M ${points[0][0]},${points[0][1]}`;
-    for (let i = 0; i < points.length - 1; i++) {
-      const p0 = points[Math.max(i - 1, 0)];
-      const p1 = points[i];
-      const p2 = points[i + 1];
-      const p3 = points[Math.min(i + 2, points.length - 1)];
-      const cp1x = p1[0] + (p2[0] - p0[0]) / 6;
-      const cp1y = p1[1] + (p2[1] - p0[1]) / 6;
-      const cp2x = p2[0] - (p3[0] - p1[0]) / 6;
-      const cp2y = p2[1] - (p3[1] - p1[1]) / 6;
-      d += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p2[0]},${p2[1]}`;
-    }
-    return d;
-  }
-
-  const curvePath = catmullRom(pts);
-  const lastPt = pts[pts.length - 1];
-  const catX = lastPt[0] - 2;
-  const catY = lastPt[1] - 12;
-
-  // area fill under curve
-  const areaPath = curvePath + ` L ${W},${H} L 0,${H} Z`;
+  const cells = Array.from({length: totalDays}, (_, i) => {
+    const date = daysAgo(totalDays - 1 - i);
+    const done = doneSet.has(date);
+    const isToday = date === todayStr;
+    return `<div class="year-cell${done ? ' done' : ''}${isToday ? ' today' : ''}" title="${date}"></div>`;
+  }).join('');
 
   return `<div class="year-chart">
     <div class="year-chart-header">
       <span class="year-chart-label">активность за год</span>
-      <span class="year-chart-count">${totalYear} раз всего</span>
+      <span class="year-chart-count">${totalYear} раз</span>
     </div>
-    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id="cg${workoutId}" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.25"/>
-          <stop offset="100%" stop-color="#7c3aed" stop-opacity="0.03"/>
-        </linearGradient>
-      </defs>
-      <path d="${areaPath}" fill="url(#cg${workoutId})"/>
-      <path d="${curvePath}" fill="none" stroke="#7c3aed" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-      <text x="${catX}" y="${catY}" text-anchor="middle" class="year-chart-cat">🐱</text>
-    </svg>
+    <div class="year-grid">${cells}</div>
   </div>`;
 }
 
