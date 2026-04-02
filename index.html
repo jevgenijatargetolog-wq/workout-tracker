@@ -651,6 +651,7 @@ function renderWorkouts() {
           ${isDone ? `<button class="btn btn-done">✓ Выполнено</button>`
                    : `<button class="btn btn-success" onclick="markDone('${w.id}')">✓ Выполнено</button>`}
           ${renderMediaBtn(w.url)}
+          <button class="btn btn-link" onclick="editWorkout('${w.id}')">✏️</button>
           <button class="btn btn-danger" onclick="deleteWorkout('${w.id}')">🗑</button>
         </div>
       </div>`;
@@ -686,6 +687,49 @@ function deleteWorkout(id) {
   if (!confirm('Удалить тренировку?')) return;
   const d = initData();
   d.workouts = d.workouts.filter(w => w.id !== id);
+  setData(d);
+  renderWorkouts();
+}
+
+function editWorkout(id) {
+  const d = initData();
+  const w = d.workouts.find(x => x.id === id);
+  if (!w) return;
+  const card = document.getElementById('wcard-' + id);
+  const catOptions = WORKOUT_CATS.map(c =>
+    `<option value="${c.id}" ${(w.category||w.type||'strength')===c.id?'selected':''}>${c.icon} ${c.label}</option>`
+  ).join('');
+  card.innerHTML = `
+    <div class="form-group"><label>Название</label>
+      <input id="ew-name-${id}" value="${escHtml(w.name)}" /></div>
+    <div class="form-group"><label>Раздел</label>
+      <select id="ew-cat-${id}">${catOptions}</select></div>
+    <div class="form-group"><label>Длительность (мин)</label>
+      <input type="number" id="ew-dur-${id}" value="${w.duration||''}" min="1"/></div>
+    <div class="form-group"><label>Ссылка</label>
+      <input type="url" id="ew-url-${id}" value="${escHtml(w.url||'')}"/></div>
+    <div class="form-group"><label>Заметки</label>
+      <textarea id="ew-notes-${id}">${escHtml(w.notes||'')}</textarea></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-primary" style="flex:1" onclick="saveEditWorkout('${id}')">Сохранить</button>
+      <button class="btn btn-link" onclick="renderWorkouts()">Отмена</button>
+    </div>`;
+}
+
+function saveEditWorkout(id) {
+  const d = initData();
+  const idx = d.workouts.findIndex(x => x.id === id);
+  if (idx < 0) return;
+  const name = document.getElementById('ew-name-' + id).value.trim();
+  if (!name) { alert('Введите название'); return; }
+  d.workouts[idx] = {
+    ...d.workouts[idx],
+    name,
+    category: document.getElementById('ew-cat-' + id).value,
+    duration: parseInt(document.getElementById('ew-dur-' + id).value) || 0,
+    url:      document.getElementById('ew-url-' + id).value.trim(),
+    notes:    document.getElementById('ew-notes-' + id).value.trim(),
+  };
   setData(d);
   renderWorkouts();
 }
@@ -738,6 +782,7 @@ function renderRecipes() {
         ${r.steps ? `<div class="recipe-section-label">Приготовление</div><div class="recipe-body">${escHtml(r.steps)}</div>` : ''}
         ${r.notes ? `<div class="recipe-section-label">Заметки</div><div class="recipe-body">${escHtml(r.notes)}</div>` : ''}
         <div class="card-actions" style="margin-top:10px">
+          <button class="btn btn-link" onclick="editRecipe('${r.id}')">✏️ Изменить</button>
           <button class="btn btn-danger" onclick="deleteRecipe('${r.id}')">🗑 Удалить</button>
         </div>
       </div>`).join('');
@@ -781,6 +826,57 @@ function deleteRecipe(id) {
   if (!confirm('Удалить рецепт?')) return;
   const d = initData();
   d.recipes = d.recipes.filter(r => r.id !== id);
+  setData(d);
+  renderRecipes();
+}
+
+function editRecipe(id) {
+  const d = initData();
+  const r = d.recipes.find(x => x.id === id);
+  if (!r) return;
+  const card = document.querySelector(`[onclick="editRecipe('${id}')"]`).closest('.recipe-card');
+  const catOptions = RECIPE_CATS.map(c =>
+    `<option value="${c.id}" ${r.category===c.id?'selected':''}>${c.icon} ${c.label}</option>`
+  ).join('');
+  card.innerHTML = `
+    <div class="form-group"><label>Название</label>
+      <input id="er-name-${id}" value="${escHtml(r.name)}" /></div>
+    <div class="form-group"><label>Раздел</label>
+      <select id="er-cat-${id}">${catOptions}</select></div>
+    <div class="form-group"><label>Ингредиенты</label>
+      <textarea id="er-ing-${id}">${escHtml(r.ingredients||'')}</textarea></div>
+    <div class="form-group"><label>Приготовление</label>
+      <textarea id="er-steps-${id}">${escHtml(r.steps||'')}</textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="form-group"><label>Калории</label>
+        <input type="number" id="er-cal-${id}" value="${r.calories||''}"/></div>
+      <div class="form-group"><label>Время (мин)</label>
+        <input type="number" id="er-time-${id}" value="${r.time||''}"/></div>
+    </div>
+    <div class="form-group"><label>Заметки</label>
+      <textarea id="er-notes-${id}">${escHtml(r.notes||'')}</textarea></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-primary" style="flex:1" onclick="saveEditRecipe('${id}')">Сохранить</button>
+      <button class="btn btn-link" onclick="renderRecipes()">Отмена</button>
+    </div>`;
+}
+
+function saveEditRecipe(id) {
+  const d = initData();
+  const idx = d.recipes.findIndex(x => x.id === id);
+  if (idx < 0) return;
+  const name = document.getElementById('er-name-' + id).value.trim();
+  if (!name) { alert('Введите название'); return; }
+  d.recipes[idx] = {
+    ...d.recipes[idx],
+    name,
+    category:    document.getElementById('er-cat-' + id).value,
+    ingredients: document.getElementById('er-ing-' + id).value.trim(),
+    steps:       document.getElementById('er-steps-' + id).value.trim(),
+    calories:    parseInt(document.getElementById('er-cal-' + id).value) || 0,
+    time:        parseInt(document.getElementById('er-time-' + id).value) || 0,
+    notes:       document.getElementById('er-notes-' + id).value.trim(),
+  };
   setData(d);
   renderRecipes();
 }
