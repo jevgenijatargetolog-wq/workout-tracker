@@ -10,7 +10,11 @@
 
   /* Header */
   header { background: linear-gradient(135deg, #7c3aed, #a855f7); color: white; padding: 18px 16px 0; }
-  header h1 { font-size: 20px; font-weight: 700; margin-bottom: 14px; }
+  header h1 { font-size: 20px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+  .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #fbbf24; flex-shrink: 0; transition: background 0.4s; }
+  .sync-dot.synced  { background: #34d399; }
+  .sync-dot.error   { background: #f87171; }
+  .sync-label { font-size: 11px; font-weight: 500; opacity: 0.8; }
   .tabs { display: flex; gap: 3px; overflow-x: auto; scrollbar-width: none; }
   .tabs::-webkit-scrollbar { display: none; }
   .tab { flex: 1; min-width: 72px; padding: 9px 6px; border: none; background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.85); border-radius: 10px 10px 0 0; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; white-space: nowrap; }
@@ -156,7 +160,7 @@
 <body>
 
 <header>
-  <h1>💪 Мои тренировки</h1>
+  <h1>💪 Мои тренировки <span class="sync-dot" id="sync-dot"></span><span class="sync-label" id="sync-label">подключение...</span></h1>
   <div class="tabs">
     <button class="tab active" onclick="showTab('workouts', this)">🏋️ Тренировки</button>
     <button class="tab" onclick="showTab('steps', this)">🚶 Ходьба</button>
@@ -325,10 +329,44 @@
 
 </main>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script>
+// ─── Firebase ──────────────────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyAlZRUvGdAlG7mgtJXgq0geCCPHIraj96A",
+  authDomain: "my-workouts-c274c.firebaseapp.com",
+  databaseURL: "https://my-workouts-c274c-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "my-workouts-c274c",
+  storageBucket: "my-workouts-c274c.firebasestorage.app",
+  messagingSenderId: "292890065524",
+  appId: "1:292890065524:web:28b2eb54c516d68ae1af21"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const DATA_REF = db.ref('data');
+
+let _isSyncing = false;
+
+function setSyncStatus(status) {
+  const dot   = document.getElementById('sync-dot');
+  const label = document.getElementById('sync-label');
+  if (!dot) return;
+  dot.className   = 'sync-dot' + (status === 'synced' ? ' synced' : status === 'error' ? ' error' : '');
+  label.textContent = status === 'synced' ? 'синхронизировано' : status === 'error' ? 'нет соединения' : 'синхронизация...';
+}
+
 // ─── Storage ───────────────────────────────────────────────────────────────
 function getData() { return JSON.parse(localStorage.getItem('wt_data') || '{}'); }
-function setData(d) { localStorage.setItem('wt_data', JSON.stringify(d)); }
+
+function setData(d) {
+  localStorage.setItem('wt_data', JSON.stringify(d));
+  setSyncStatus('syncing');
+  DATA_REF.set(d)
+    .then(() => setSyncStatus('synced'))
+    .catch(() => setSyncStatus('error'));
+}
+
 function initData() {
   const d = getData();
   if (!d.workouts)    d.workouts = [];
@@ -337,6 +375,27 @@ function initData() {
   if (!d.stepGoal)    d.stepGoal = 10000;
   if (!d.weight)      d.weight = [];
   return d;
+}
+
+// ─── Real-time listener ────────────────────────────────────────────────────
+DATA_REF.on('value', (snapshot) => {
+  if (_isSyncing) return;
+  const val = snapshot.val();
+  if (val) {
+    localStorage.setItem('wt_data', JSON.stringify(val));
+    refreshCurrentTab();
+    setSyncStatus('synced');
+  }
+}, () => setSyncStatus('error'));
+
+function refreshCurrentTab() {
+  const active = document.querySelector('.section.active');
+  if (!active) return;
+  const id = active.id;
+  if (id === 'tab-workouts') renderWorkouts();
+  if (id === 'tab-steps')    renderSteps();
+  if (id === 'tab-weight')   renderWeight();
+  if (id === 'tab-progress') renderProgress();
 }
 
 // ─── Utils ──────────────────────────────────────────────────────────────────
@@ -955,6 +1014,7 @@ function clearAllData() {
   if (!confirm('Удалить ВСЕ данные? Это нельзя отменить.')) return;
   if (!confirm('Вы уверены? Все тренировки, шаги и вес будут удалены.')) return;
   localStorage.removeItem('wt_data');
+  DATA_REF.remove();
   initData();
   renderWorkouts();
   alert('Данные удалены.');
