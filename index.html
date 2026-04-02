@@ -168,6 +168,16 @@
   .recipe-section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #aaa; margin: 10px 0 4px; }
   .recipe-body { font-size: 13px; color: #555; line-height: 1.6; white-space: pre-wrap; }
 
+  /* Mini usage chart */
+  .mini-chart { margin-top: 12px; padding-top: 10px; border-top: 1px solid #f3f4f6; }
+  .mini-chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .mini-chart-label { font-size: 11px; color: #aaa; font-weight: 600; }
+  .mini-chart-count { font-size: 11px; color: #7c3aed; font-weight: 700; }
+  .mini-dots { display: grid; grid-template-columns: repeat(28, 1fr); gap: 2px; }
+  .mini-dot { aspect-ratio: 1; border-radius: 2px; background: #f0eeff; }
+  .mini-dot.done { background: #7c3aed; }
+  .mini-dot.today { outline: 2px solid #f59e0b; outline-offset: 0px; }
+
   /* Empty */
   .empty { text-align: center; padding: 36px 20px; color: #bbb; }
   .empty-icon { font-size: 36px; margin-bottom: 8px; }
@@ -654,6 +664,7 @@ function renderWorkouts() {
           <button class="btn btn-link" onclick="editWorkout('${w.id}')">✏️</button>
           <button class="btn btn-danger" onclick="deleteWorkout('${w.id}')">🗑</button>
         </div>
+        ${renderWorkoutMiniChart(w.id, d.completions)}
       </div>`;
     }).join('');
     const countLabel = doneCount > 0 ? `${doneCount}/${catWorkouts.length}` : `${catWorkouts.length}`;
@@ -671,6 +682,26 @@ function renderWorkouts() {
 
 function toggleCat(id) {
   document.getElementById('cat-' + id).classList.toggle('open');
+}
+
+function renderWorkoutMiniChart(workoutId, completions) {
+  const days = Array.from({length: 28}, (_, i) => daysAgo(27 - i));
+  const todayStr = today();
+  const doneSet = new Set(completions.filter(c => c.workoutId === workoutId).map(c => c.date));
+  const totalMonth = days.filter(d => doneSet.has(d)).length;
+  if (doneSet.size === 0) return '';
+  const dots = days.map(d => {
+    const done = doneSet.has(d);
+    const isToday = d === todayStr;
+    return `<div class="mini-dot${done ? ' done' : ''}${isToday ? ' today' : ''}" title="${d}"></div>`;
+  }).join('');
+  return `<div class="mini-chart">
+    <div class="mini-chart-header">
+      <span class="mini-chart-label">последние 4 недели</span>
+      <span class="mini-chart-count">${totalMonth} раз за месяц</span>
+    </div>
+    <div class="mini-dots">${dots}</div>
+  </div>`;
 }
 
 function markDone(id) {
