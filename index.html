@@ -832,9 +832,9 @@ function saveWorkout() {
     notes: document.getElementById('f-notes').value.trim()
   });
   setData(d);
+  const newCat = document.getElementById('f-category').value;
   ['f-name','f-duration','f-url','f-notes'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('f-category').value = 'morning';
-  const newCat = document.getElementById('f-category').value;
   toggleAddForm();
   renderWorkouts(newCat);
 }
