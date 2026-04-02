@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Мои тренировки</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f3ff; color: #1a1a2e; min-height: 100vh; }
+
+  /* Header */
+  header { background: linear-gradient(135deg, #7c3aed, #a855f7); color: white; padding: 18px 16px 0; }
+  header h1 { font-size: 20px; font-weight: 700; margin-bottom: 14px; }
+  .tabs { display: flex; gap: 3px; overflow-x: auto; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { flex: 1; min-width: 72px; padding: 9px 6px; border: none; background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.85); border-radius: 10px 10px 0 0; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; white-space: nowrap; }
+  .tab.active { background: white; color: #7c3aed; }
+  .tab:hover:not(.active) { background: rgba(255,255,255,0.25); color: white; }
+
+  main { padding: 14px; max-width: 720px; margin: 0 auto; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* Cards */
+  .card { background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(124,58,237,0.08); }
+  .card-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .card-meta { font-size: 12px; color: #888; margin-bottom: 10px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  /* Badges */
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-strength { background: #fce7f3; color: #be185d; }
+  .badge-yoga { background: #d1fae5; color: #065f46; }
+  .badge-walk { background: #dbeafe; color: #1d4ed8; }
+  .badge-other { background: #f3f4f6; color: #4b5563; }
+
+  /* Buttons */
+  .btn { padding: 8px 14px; border: none; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+  .btn-primary { background: #7c3aed; color: white; }
+  .btn-primary:hover { background: #6d28d9; }
+  .btn-success { background: #10b981; color: white; }
+  .btn-success:hover { background: #059669; }
+  .btn-done { background: #d1fae5; color: #065f46; cursor: default; }
+  .btn-link { background: #f3f4f6; color: #4b5563; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+  .btn-link:hover { background: #e5e7eb; }
+  .btn-danger { background: #fee2e2; color: #dc2626; padding: 6px 10px; font-size: 12px; }
+  .btn-danger:hover { background: #fecaca; }
+  .card-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .done-today { border-left: 4px solid #10b981; }
+  .done-badge { background: #d1fae5; color: #065f46; padding: 3px 8px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+
+  /* Forms */
+  .form-card { background: white; border-radius: 16px; padding: 18px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(124,58,237,0.08); }
+  .form-card h3 { font-size: 15px; font-weight: 700; color: #7c3aed; margin-bottom: 14px; }
+  .form-group { margin-bottom: 12px; }
+  label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 5px; }
+  input, select, textarea { width: 100%; padding: 10px 12px; border: 1.5px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: border 0.2s; font-family: inherit; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: #7c3aed; }
+  textarea { resize: vertical; min-height: 65px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .toggle-form-btn { width: 100%; padding: 12px; background: white; border: 2px dashed #c4b5fd; border-radius: 16px; color: #7c3aed; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 14px; transition: all 0.2s; }
+  .toggle-form-btn:hover { background: #f5f3ff; }
+
+  /* Steps */
+  .steps-today { text-align: center; padding: 20px 16px 8px; }
+  .steps-number { font-size: 52px; font-weight: 800; color: #7c3aed; line-height: 1; }
+  .steps-label { font-size: 13px; color: #888; margin-top: 4px; }
+  .progress-bar { background: #e5e7eb; border-radius: 20px; height: 14px; margin: 14px 0 6px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 20px; background: linear-gradient(90deg, #7c3aed, #a855f7); transition: width 0.5s ease; }
+  .progress-text { font-size: 13px; color: #888; text-align: center; margin-bottom: 14px; }
+  .input-row { display: flex; gap: 10px; margin-bottom: 14px; }
+  .input-row input { flex: 1; }
+  .goal-row { display: flex; gap: 10px; align-items: center; }
+  .goal-row label { white-space: nowrap; font-size: 13px; font-weight: 600; color: #555; margin: 0; }
+  .goal-row input { flex: 1; }
+
+  /* Bar chart */
+  .chart-title { font-size: 13px; font-weight: 700; color: #666; margin-bottom: 10px; }
+  .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 90px; }
+  .bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+  .bar { width: 100%; border-radius: 5px 5px 0 0; background: linear-gradient(180deg, #a855f7, #7c3aed); transition: height 0.5s; min-height: 2px; }
+  .bar.today { background: linear-gradient(180deg, #f59e0b, #d97706); }
+  .bar-day { font-size: 10px; color: #999; }
+  .bar-val { font-size: 10px; color: #7c3aed; font-weight: 600; }
+
+  /* Stats */
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+  .stat-card { background: white; border-radius: 14px; padding: 14px 8px; text-align: center; box-shadow: 0 2px 8px rgba(124,58,237,0.08); }
+  .stat-number { font-size: 24px; font-weight: 800; color: #7c3aed; }
+  .stat-label { font-size: 11px; color: #888; margin-top: 2px; line-height: 1.3; }
+  .stat-card.green .stat-number { color: #10b981; }
+  .stat-card.orange .stat-number { color: #f59e0b; }
+  .stat-card.red .stat-number { color: #ef4444; }
+
+  /* Weight canvas */
+  canvas { width: 100%; border-radius: 10px; display: block; }
+  .weight-entries { margin-top: 12px; }
+  .weight-entry { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f3f4f6; font-size: 13px; }
+  .weight-entry:last-child { border-bottom: none; }
+  .weight-entry .we-date { color: #888; }
+  .weight-entry .we-val { font-weight: 700; color: #7c3aed; }
+  .weight-entry .we-del { background: none; border: none; cursor: pointer; color: #ddd; font-size: 16px; padding: 0 4px; }
+  .weight-entry .we-del:hover { color: #ef4444; }
+
+  /* Coach tips */
+  .coach-card { border-radius: 16px; padding: 16px; margin-bottom: 14px; }
+  .coach-card.motivation { background: linear-gradient(135deg, #fef3c7, #fde68a); border-left: 4px solid #f59e0b; }
+  .coach-card.success { background: linear-gradient(135deg, #d1fae5, #a7f3d0); border-left: 4px solid #10b981; }
+  .coach-card.tip { background: linear-gradient(135deg, #ede9fe, #ddd6fe); border-left: 4px solid #7c3aed; }
+  .coach-card.warning { background: linear-gradient(135deg, #fee2e2, #fecaca); border-left: 4px solid #ef4444; }
+  .coach-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .coach-icon { font-size: 24px; }
+  .coach-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; }
+  .coach-text { font-size: 14px; font-weight: 500; line-height: 1.5; }
+
+  /* Progress insights */
+  .insight-card { background: white; border-radius: 14px; padding: 14px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(124,58,237,0.06); }
+  .insight-title { font-size: 12px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .insight-value { font-size: 20px; font-weight: 800; color: #1a1a2e; }
+  .insight-sub { font-size: 12px; color: #888; margin-top: 3px; }
+  .insights-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .trend-up { color: #ef4444; }
+  .trend-down { color: #10b981; }
+  .trend-flat { color: #888; }
+
+  /* History */
+  .history-date { font-size: 13px; font-weight: 700; color: #7c3aed; margin: 14px 0 8px; }
+  .history-item { background: white; border-radius: 12px; padding: 11px 14px; margin-bottom: 6px; font-size: 13px; display: flex; align-items: center; gap: 10px; box-shadow: 0 1px 4px rgba(124,58,237,0.06); }
+  .history-icon { font-size: 18px; }
+  .history-name { font-weight: 600; flex: 1; }
+  .history-time { font-size: 11px; color: #aaa; }
+
+  /* Weekly grid */
+  .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 8px; }
+  .week-cell { aspect-ratio: 1; border-radius: 5px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #aaa; flex-direction: column; gap: 1px; }
+  .week-cell.has-workout { background: #7c3aed; color: white; }
+  .week-cell.has-steps { background: #ddd6fe; color: #7c3aed; }
+  .week-cell.both { background: #7c3aed; color: white; }
+  .week-cell-day { font-size: 8px; }
+
+  /* YouTube */
+  .yt-iframe-wrap { position: relative; padding-bottom: 56.25%; height: 0; border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
+  .yt-iframe-wrap iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+
+  /* Empty */
+  .empty { text-align: center; padding: 36px 20px; color: #bbb; }
+  .empty-icon { font-size: 36px; margin-bottom: 8px; }
+  .empty p { font-size: 13px; }
+
+  @media (max-width: 420px) {
+    .form-row { grid-template-columns: 1fr; }
+    .stats-row { gap: 7px; }
+    .stat-number { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>💪 Мои тренировки</h1>
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('workouts', this)">🏋️ Тренировки</button>
+    <button class="tab" onclick="showTab('steps', this)">🚶 Ходьба</button>
+    <button class="tab" onclick="showTab('weight', this)">⚖️ Вес</button>
+    <button class="tab" onclick="showTab('progress', this)">📊 Прогресс</button>
+    <button class="tab" onclick="showTab('settings', this)">⚙️ Данные</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ===== WORKOUTS ===== -->
+  <div id="tab-workouts" class="section active">
+    <br>
+    <div id="coach-workouts"></div>
+    <button class="toggle-form-btn" onclick="toggleAddForm()" id="toggle-btn">+ Добавить тренировку</button>
+    <div id="add-form" style="display:none">
+      <div class="form-card">
+        <h3>Новая тренировка</h3>
+        <div class="form-group">
+          <label>Название</label>
+          <input type="text" id="f-name" placeholder="Например: Йога для спины" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Тип</label>
+            <select id="f-type">
+              <option value="strength">💪 Силовая</option>
+              <option value="yoga">🧘 Йога / растяжка</option>
+              <option value="walk">🚶 Ходьба</option>
+              <option value="other">⭐ Другое</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Длительность (мин)</label>
+            <input type="number" id="f-duration" placeholder="30" min="1" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Ссылка (YouTube или Google Drive)</label>
+          <input type="url" id="f-url" placeholder="https://youtube.com/watch?v=..." />
+        </div>
+        <div class="form-group">
+          <label>Заметки</label>
+          <textarea id="f-notes" placeholder="Описание, что понадобится..."></textarea>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-primary" onclick="saveWorkout()" style="flex:1">Сохранить</button>
+          <button class="btn btn-link" onclick="toggleAddForm()">Отмена</button>
+        </div>
+      </div>
+    </div>
+    <div id="workouts-list"></div>
+  </div>
+
+  <!-- ===== STEPS ===== -->
+  <div id="tab-steps" class="section">
+    <br>
+    <div class="card">
+      <div class="steps-today">
+        <div class="steps-number" id="steps-display">0</div>
+        <div class="steps-label">шагов сегодня</div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="steps-progress" style="width:0%"></div></div>
+      <div class="progress-text" id="steps-progress-text">0 из 10 000</div>
+      <div class="input-row">
+        <input type="number" id="steps-input" placeholder="Шаги за сегодня" min="0" />
+        <button class="btn btn-primary" onclick="saveSteps()">Сохранить</button>
+      </div>
+      <div class="goal-row">
+        <label>Цель:</label>
+        <input type="number" id="goal-input" placeholder="10000" min="1" />
+        <button class="btn btn-link" onclick="saveGoal()">OK</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="chart-title">Шаги за 7 дней</div>
+      <div class="bar-chart" id="steps-chart"></div>
+    </div>
+    <div class="stats-row" id="steps-stats"></div>
+  </div>
+
+  <!-- ===== WEIGHT ===== -->
+  <div id="tab-weight" class="section">
+    <br>
+    <div class="card">
+      <div class="form-row" style="margin-bottom:12px">
+        <div class="form-group" style="margin:0">
+          <label>Вес сегодня (кг)</label>
+          <input type="number" id="w-value" placeholder="65.0" step="0.1" min="20" max="300" />
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Целевой вес (кг)</label>
+          <input type="number" id="w-goal" placeholder="60.0" step="0.1" min="20" max="300" />
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="saveWeight()">Сохранить вес</button>
+    </div>
+
+    <div class="stats-row" id="weight-stats"></div>
+
+    <div class="card">
+      <div class="chart-title">График веса</div>
+      <canvas id="weight-chart" height="160"></canvas>
+    </div>
+
+    <div class="card">
+      <div class="chart-title">Последние записи</div>
+      <div class="weight-entries" id="weight-entries"></div>
+    </div>
+  </div>
+
+  <!-- ===== PROGRESS ===== -->
+  <div id="tab-progress" class="section">
+    <br>
+    <div id="coach-tips-section"></div>
+
+    <div class="card">
+      <div class="chart-title">Активность за 4 недели</div>
+      <div class="week-grid" id="activity-grid"></div>
+      <div style="display:flex;gap:14px;margin-top:10px;font-size:11px;color:#888">
+        <span><span style="display:inline-block;width:10px;height:10px;background:#7c3aed;border-radius:2px;margin-right:4px"></span>Тренировка</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:#ddd6fe;border-radius:2px;margin-right:4px"></span>Только шаги</span>
+      </div>
+    </div>
+
+    <div class="insights-grid" id="insights-grid"></div>
+
+    <div id="history-section">
+      <div style="font-size:15px;font-weight:700;margin-bottom:10px;color:#1a1a2e">История</div>
+      <div id="history-list"></div>
+    </div>
+  </div>
+
+  <!-- ===== SETTINGS / DATA ===== -->
+  <div id="tab-settings" class="section">
+    <br>
+    <div class="card">
+      <div style="font-size:15px;font-weight:700;margin-bottom:6px">💾 Резервная копия</div>
+      <div style="font-size:13px;color:#888;margin-bottom:14px;line-height:1.5">Сохраните все свои данные в файл и загрузите их на другом устройстве (планшет, телефон).</div>
+      <button class="btn btn-primary" style="width:100%;margin-bottom:10px" onclick="exportData()">⬇ Скачать резервную копию</button>
+      <label style="display:block;width:100%">
+        <div class="btn btn-link" style="width:100%;justify-content:center;cursor:pointer">⬆ Загрузить резервную копию</div>
+        <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)" />
+      </label>
+      <div id="import-status" style="margin-top:10px;font-size:13px;text-align:center"></div>
+    </div>
+
+    <div class="card">
+      <div style="font-size:15px;font-weight:700;margin-bottom:6px">📱 Открыть на планшете / телефоне</div>
+      <div style="font-size:13px;color:#888;line-height:1.6">
+        1. Зайдите на <b>netlify.com/drop</b> с компьютера<br>
+        2. Перетащите папку <b>workout-tracker</b> на страницу<br>
+        3. Скопируйте полученную ссылку<br>
+        4. Откройте её на планшете или телефоне<br><br>
+        После открытия — загрузите резервную копию через кнопку выше, чтобы перенести данные.
+      </div>
+    </div>
+
+    <div class="card" style="border:1.5px solid #fee2e2">
+      <div style="font-size:15px;font-weight:700;margin-bottom:6px;color:#dc2626">🗑 Удалить все данные</div>
+      <div style="font-size:13px;color:#888;margin-bottom:14px">Удалит все тренировки, шаги, вес и историю. Это действие нельзя отменить.</div>
+      <button class="btn btn-danger" style="width:100%" onclick="clearAllData()">Удалить всё</button>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ─── Storage ───────────────────────────────────────────────────────────────
+function getData() { return JSON.parse(localStorage.getItem('wt_data') || '{}'); }
+function setData(d) { localStorage.setItem('wt_data', JSON.stringify(d)); }
+function initData() {
+  const d = getData();
+  if (!d.workouts)    d.workouts = [];
+  if (!d.completions) d.completions = [];
+  if (!d.steps)       d.steps = [];
+  if (!d.stepGoal)    d.stepGoal = 10000;
+  if (!d.weight)      d.weight = [];
+  return d;
+}
+
+// ─── Utils ──────────────────────────────────────────────────────────────────
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+function today() { return new Date().toISOString().slice(0, 10); }
+function daysAgo(n) { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); }
+function formatDate(s) { return new Date(s + 'T00:00:00').toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' }); }
+function shortDay(s) { return new Date(s + 'T00:00:00').toLocaleDateString('ru-RU', { weekday: 'short' }).slice(0, 2); }
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function typeLabel(t) { return { strength:'💪 Силовая', yoga:'🧘 Йога', walk:'🚶 Ходьба', other:'⭐ Другое' }[t] || t; }
+function typeBadge(t) { return `<span class="badge badge-${t}">${typeLabel(t)}</span>`; }
+function typeIcon(t)  { return { strength:'💪', yoga:'🧘', walk:'🚶', other:'⭐' }[t] || '⭐'; }
+
+// ─── YouTube ────────────────────────────────────────────────────────────────
+function getYouTubeId(url) {
+  if (!url) return null;
+  const m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+function renderMediaBtn(url) {
+  if (!url) return '';
+  const ytId = getYouTubeId(url);
+  if (ytId) return `<button class="btn btn-link" onclick="openYT('${ytId}', this)">▶ YouTube</button>`;
+  if (url.includes('drive.google.com')) return `<a class="btn btn-link" href="${url}" target="_blank">📁 Drive</a>`;
+  return `<a class="btn btn-link" href="${url}" target="_blank">🔗 Открыть</a>`;
+}
+function openYT(ytId, btn) {
+  const card = btn.closest('.card');
+  let wrap = card.querySelector('.yt-iframe-wrap');
+  if (wrap) { wrap.remove(); return; }
+  wrap = document.createElement('div');
+  wrap.className = 'yt-iframe-wrap';
+  wrap.innerHTML = `<iframe src="https://www.youtube.com/embed/${ytId}?autoplay=1" allowfullscreen allow="autoplay"></iframe>`;
+  btn.parentNode.insertBefore(wrap, btn.parentNode.firstChild);
+}
+
+// ─── Coach Tips ─────────────────────────────────────────────────────────────
+const GENERAL_TIPS = [
+  'Пейте воду до, во время и после тренировки — это ускоряет восстановление.',
+  'После силовой тренировки давайте мышцам 48 часов на отдых.',
+  'Растяжка 5–10 минут после тренировки снижает боль на следующий день.',
+  'Регулярность важнее интенсивности: 3 раза в неделю лучше, чем одна изнурительная тренировка.',
+  'Взвешивайтесь утром натощак, в одно и то же время — так данные точнее.',
+  'Небольшая прогулка после еды помогает контролировать уровень сахара в крови.',
+  'Йога 2–3 раза в неделю заметно улучшает гибкость уже через месяц.',
+  'Сон не менее 7–8 часов — важнейший элемент восстановления после тренировок.',
+  'Добавьте белок в каждый приём пищи — это помогает сохранять мышечную массу при похудении.',
+  'Если нет времени на полную тренировку, сделайте хотя бы 10-минутную растяжку.',
+  'Прогулка в быстром темпе 30 минут сжигает примерно 150–200 ккал.',
+  'Чередуйте силовые тренировки и йогу — это снижает риск травм и перетренированности.',
+];
+
+function getCoachTips(d) {
+  const tips = [];
+  const todayStr = today();
+  const sorted = [...d.completions].sort((a, b) => b.date.localeCompare(a.date));
+  const lastComp = sorted[0];
+  const daysSince = lastComp
+    ? Math.floor((Date.now() - new Date(lastComp.date + 'T12:00:00').getTime()) / 86400000)
+    : 999;
+
+  // No workout for 3+ days
+  if (daysSince >= 3 && daysSince < 999) {
+    tips.push({ type: 'warning', icon: '⏰', label: 'Совет тренера', text: `Последняя тренировка была ${daysSince} дня назад. Даже 15 минут лёгкой йоги сегодня вернут тонус!` });
+  }
+  if (daysSince === 999 && d.workouts.length > 0) {
+    tips.push({ type: 'motivation', icon: '🚀', label: 'Начнём?', text: 'Тренировки добавлены, осталось сделать первый шаг. Выберите любую и нажмите "Выполнено"!' });
+  }
+
+  // Steps goal hit today
+  const todaySteps = d.steps.find(s => s.date === todayStr);
+  if (todaySteps && todaySteps.count >= d.stepGoal) {
+    tips.push({ type: 'success', icon: '🎉', label: 'Отлично!', text: `Цель по шагам выполнена: ${todaySteps.count.toLocaleString('ru')} шагов. Так держать!` });
+  } else if (todaySteps && todaySteps.count >= d.stepGoal * 0.8) {
+    const left = d.stepGoal - todaySteps.count;
+    tips.push({ type: 'motivation', icon: '👟', label: 'Почти цель!', text: `Осталось всего ${left.toLocaleString('ru')} шагов до дневной цели. Небольшая прогулка — и готово!` });
+  }
+
+  // Weight progress
+  if (d.weight && d.weight.length >= 3) {
+    const ws = [...d.weight].sort((a, b) => a.date.localeCompare(b.date));
+    const first = ws[0].value;
+    const last = ws[ws.length - 1].value;
+    const diff = first - last;
+    if (diff > 0.5) {
+      tips.push({ type: 'success', icon: '⚖️', label: 'Прогресс по весу', text: `Вы уже потеряли ${diff.toFixed(1)} кг! Продолжайте в том же духе.` });
+    } else if (diff < -0.5) {
+      tips.push({ type: 'tip', icon: '💡', label: 'Совет тренера', text: 'Вес немного вырос — это нормально. Обратите внимание на восстановление и питание.' });
+    }
+  }
+
+  // Streak achievement
+  const streak = calcStreak(d);
+  if (streak >= 7) {
+    tips.push({ type: 'success', icon: '🔥', label: 'Серия!', text: `${streak} дней активности подряд — отличный результат! Не забывайте про день отдыха.` });
+  }
+
+  // Add daily general tip
+  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+  tips.push({ type: 'tip', icon: '💡', label: 'Совет дня', text: GENERAL_TIPS[dayOfYear % GENERAL_TIPS.length] });
+
+  return tips.slice(0, 2); // Show max 2 tips
+}
+
+function renderCoachSection(containerId, d) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const tips = getCoachTips(d);
+  el.innerHTML = tips.map(t => `
+    <div class="coach-card ${t.type}">
+      <div class="coach-header">
+        <span class="coach-icon">${t.icon}</span>
+        <span class="coach-label">${t.label}</span>
+      </div>
+      <div class="coach-text">${t.text}</div>
+    </div>`).join('');
+}
+
+// ─── Streak ─────────────────────────────────────────────────────────────────
+function calcStreak(d) {
+  let streak = 0;
+  const dt = new Date();
+  while (streak < 365) {
+    const ds = dt.toISOString().slice(0, 10);
+    const active = d.completions.some(c => c.date === ds) || d.steps.some(s => s.date === ds && s.count > 0);
+    if (!active) break;
+    streak++;
+    dt.setDate(dt.getDate() - 1);
+  }
+  return streak;
+}
+
+// ─── Workouts ───────────────────────────────────────────────────────────────
+function renderWorkouts() {
+  const d = initData();
+  const todayStr = today();
+  renderCoachSection('coach-workouts', d);
+  const list = document.getElementById('workouts-list');
+  if (!d.workouts.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">🏋️</div><p>Добавьте первую тренировку</p></div>`;
+    return;
+  }
+  list.innerHTML = d.workouts.map(w => {
+    const isDone = d.completions.some(c => c.workoutId === w.id && c.date === todayStr);
+    return `<div class="card ${isDone ? 'done-today' : ''}" id="wcard-${w.id}">
+      <div class="card-title">${escHtml(w.name)}</div>
+      <div class="card-meta">
+        ${typeBadge(w.type)}
+        ${w.duration ? `<span>⏱ ${w.duration} мин</span>` : ''}
+        ${isDone ? '<span class="done-badge">✓ Выполнено сегодня</span>' : ''}
+      </div>
+      ${w.notes ? `<div style="font-size:13px;color:#666;margin-bottom:10px">${escHtml(w.notes)}</div>` : ''}
+      <div class="card-actions">
+        ${isDone ? `<button class="btn btn-done">✓ Выполнено</button>`
+                 : `<button class="btn btn-success" onclick="markDone('${w.id}')">✓ Выполнено</button>`}
+        ${renderMediaBtn(w.url)}
+        <button class="btn btn-danger" onclick="deleteWorkout('${w.id}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function markDone(id) {
+  const d = initData();
+  const todayStr = today();
+  if (!d.completions.some(c => c.workoutId === id && c.date === todayStr)) {
+    d.completions.push({ workoutId: id, date: todayStr, ts: Date.now() });
+    setData(d);
+  }
+  renderWorkouts();
+}
+
+function deleteWorkout(id) {
+  if (!confirm('Удалить тренировку?')) return;
+  const d = initData();
+  d.workouts = d.workouts.filter(w => w.id !== id);
+  setData(d);
+  renderWorkouts();
+}
+
+function saveWorkout() {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { alert('Введите название'); return; }
+  const d = initData();
+  d.workouts.push({ id: uid(), name, type: document.getElementById('f-type').value,
+    duration: parseInt(document.getElementById('f-duration').value) || 0,
+    url: document.getElementById('f-url').value.trim(),
+    notes: document.getElementById('f-notes').value.trim() });
+  setData(d);
+  ['f-name','f-duration','f-url','f-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-type').value = 'strength';
+  toggleAddForm();
+  renderWorkouts();
+}
+
+function toggleAddForm() {
+  const form = document.getElementById('add-form');
+  const btn  = document.getElementById('toggle-btn');
+  const show = form.style.display === 'none';
+  form.style.display = show ? 'block' : 'none';
+  btn.textContent = show ? '✕ Скрыть форму' : '+ Добавить тренировку';
+}
+
+// ─── Steps ──────────────────────────────────────────────────────────────────
+function renderSteps() {
+  const d = initData();
+  const todayStr = today();
+  const entry = d.steps.find(s => s.date === todayStr);
+  const count = entry ? entry.count : 0;
+  const goal  = d.stepGoal;
+  const pct   = Math.min(100, Math.round(count / goal * 100));
+  document.getElementById('steps-display').textContent = count.toLocaleString('ru');
+  document.getElementById('steps-progress').style.width = pct + '%';
+  document.getElementById('steps-progress-text').textContent = `${count.toLocaleString('ru')} из ${goal.toLocaleString('ru')} шагов (${pct}%)`;
+  document.getElementById('steps-input').value = count || '';
+  document.getElementById('goal-input').value = goal;
+  renderStepsChart(d, goal);
+  renderStepsStats(d, goal);
+}
+
+function renderStepsChart(d, goal) {
+  const days = Array.from({length:7}, (_, i) => daysAgo(6 - i));
+  const todayStr = today();
+  const maxVal = Math.max(goal, ...days.map(date => (d.steps.find(s => s.date === date) || {count:0}).count), 1);
+  document.getElementById('steps-chart').innerHTML = days.map(date => {
+    const val = (d.steps.find(s => s.date === date) || {count:0}).count;
+    const h = Math.round(val / maxVal * 72);
+    return `<div class="bar-wrap">
+      <div class="bar-val">${val >= 1000 ? (val/1000).toFixed(1)+'к' : (val||'')}</div>
+      <div class="bar ${date === todayStr ? 'today' : ''}" style="height:${h}px"></div>
+      <div class="bar-day">${shortDay(date)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderStepsStats(d, goal) {
+  const weekDays = Array.from({length:7}, (_, i) => daysAgo(6 - i));
+  const weekSteps = weekDays.reduce((s, date) => s + ((d.steps.find(x => x.date === date) || {count:0}).count), 0);
+  const daysHit   = weekDays.filter(date => (d.steps.find(x => x.date === date) || {count:0}).count >= goal).length;
+  document.getElementById('steps-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-number">${Math.round(weekSteps/1000)}к</div><div class="stat-label">шагов за неделю</div></div>
+    <div class="stat-card ${daysHit>=5?'green':daysHit>=3?'orange':''}"><div class="stat-number">${daysHit}</div><div class="stat-label">дней с целью</div></div>
+    <div class="stat-card"><div class="stat-number">${(weekSteps/7/1000).toFixed(1)}к</div><div class="stat-label">среднее в день</div></div>`;
+}
+
+function saveSteps() {
+  const val = parseInt(document.getElementById('steps-input').value);
+  if (isNaN(val) || val < 0) { alert('Введите корректное число'); return; }
+  const d = initData();
+  const todayStr = today();
+  const idx = d.steps.findIndex(s => s.date === todayStr);
+  if (idx >= 0) d.steps[idx].count = val; else d.steps.push({ date: todayStr, count: val });
+  setData(d);
+  renderSteps();
+}
+
+function saveGoal() {
+  const val = parseInt(document.getElementById('goal-input').value);
+  if (isNaN(val) || val < 1) { alert('Введите корректную цель'); return; }
+  const d = initData();
+  d.stepGoal = val;
+  setData(d);
+  renderSteps();
+}
+
+// ─── Weight ─────────────────────────────────────────────────────────────────
+function renderWeight() {
+  const d = initData();
+  document.getElementById('w-goal').value = d.weightGoal || '';
+  renderWeightStats(d);
+  renderWeightChart(d);
+  renderWeightEntries(d);
+}
+
+function renderWeightStats(d) {
+  const entries = [...(d.weight || [])].sort((a,b) => a.date.localeCompare(b.date));
+  const goal = d.weightGoal;
+  if (!entries.length) {
+    document.getElementById('weight-stats').innerHTML = `
+      <div class="stat-card"><div class="stat-number">—</div><div class="stat-label">начальный вес</div></div>
+      <div class="stat-card"><div class="stat-number">—</div><div class="stat-label">текущий вес</div></div>
+      <div class="stat-card"><div class="stat-number">—</div><div class="stat-label">изменение</div></div>`;
+    return;
+  }
+  const first = entries[0].value;
+  const last  = entries[entries.length - 1].value;
+  const diff  = last - first;
+  const cls   = diff < 0 ? 'green' : diff > 0 ? 'red' : '';
+  const sign  = diff > 0 ? '+' : '';
+  document.getElementById('weight-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-number">${first}</div><div class="stat-label">начало (кг)</div></div>
+    <div class="stat-card"><div class="stat-number">${last}</div><div class="stat-label">сейчас (кг)</div></div>
+    <div class="stat-card ${cls}"><div class="stat-number">${sign}${diff.toFixed(1)}</div><div class="stat-label">изменение (кг)</div></div>`;
+}
+
+function renderWeightChart(d) {
+  const canvas = document.getElementById('weight-chart');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const displayW = canvas.offsetWidth || canvas.parentElement.offsetWidth || 320;
+  const displayH = 160;
+  canvas.width  = displayW * dpr;
+  canvas.height = displayH * dpr;
+  canvas.style.height = displayH + 'px';
+  ctx.scale(dpr, dpr);
+  const W = displayW, H = displayH;
+
+  const entries = [...(d.weight || [])].sort((a,b) => a.date.localeCompare(b.date)).slice(-60);
+
+  if (entries.length < 2) {
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = '#ccc';
+    ctx.font = '13px -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Добавьте минимум 2 записи', W/2, H/2 - 8);
+    ctx.fillText('для отображения графика', W/2, H/2 + 10);
+    return;
+  }
+
+  const pad = { top: 16, right: 24, bottom: 28, left: 38 };
+  const values = entries.map(e => e.value);
+  const goal   = d.weightGoal;
+  const allVals = goal ? [...values, goal] : values;
+  const minV = Math.min(...allVals) - 0.5;
+  const maxV = Math.max(...allVals) + 0.5;
+  const n = entries.length;
+  const xS = i  => pad.left + (i / (n - 1)) * (W - pad.left - pad.right);
+  const yS = v  => pad.top  + (1 - (v - minV) / (maxV - minV)) * (H - pad.top - pad.bottom);
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.top + (i/4) * (H - pad.top - pad.bottom);
+    const v = maxV - (i/4) * (maxV - minV);
+    ctx.strokeStyle = '#f0eeff';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
+    ctx.fillStyle = '#bbb';
+    ctx.font = '10px -apple-system, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(v.toFixed(1), pad.left - 4, y + 4);
+  }
+
+  // Goal line
+  if (goal) {
+    const gy = yS(goal);
+    ctx.strokeStyle = '#10b981';
+    ctx.setLineDash([5, 4]);
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(pad.left, gy); ctx.lineTo(W - pad.right, gy); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#10b981';
+    ctx.font = 'bold 10px -apple-system, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('цель ' + goal, W - pad.right + 2, gy + 4);
+  }
+
+  // Area
+  ctx.fillStyle = 'rgba(124,58,237,0.07)';
+  ctx.beginPath();
+  entries.forEach((e, i) => {
+    i === 0 ? ctx.moveTo(xS(i), yS(e.value)) : ctx.lineTo(xS(i), yS(e.value));
+  });
+  ctx.lineTo(xS(n-1), H - pad.bottom);
+  ctx.lineTo(xS(0),   H - pad.bottom);
+  ctx.closePath(); ctx.fill();
+
+  // Line
+  ctx.strokeStyle = '#7c3aed';
+  ctx.lineWidth = 2.5;
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  entries.forEach((e, i) => {
+    i === 0 ? ctx.moveTo(xS(i), yS(e.value)) : ctx.lineTo(xS(i), yS(e.value));
+  });
+  ctx.stroke();
+
+  // Dots
+  entries.forEach((e, i) => {
+    const x = xS(i), y = yS(e.value);
+    ctx.fillStyle = '#7c3aed';
+    ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'white';
+    ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI*2); ctx.fill();
+  });
+
+  // X labels (max 5)
+  const lblCount = Math.min(n, 5);
+  ctx.fillStyle = '#aaa';
+  ctx.font = '10px -apple-system, sans-serif';
+  ctx.textAlign = 'center';
+  for (let i = 0; i < lblCount; i++) {
+    const idx = Math.round(i / (lblCount - 1) * (n - 1));
+    const dt  = new Date(entries[idx].date + 'T00:00:00');
+    ctx.fillText(dt.toLocaleDateString('ru-RU', { day:'numeric', month:'short' }), xS(idx), H - 6);
+  }
+}
+
+function renderWeightEntries(d) {
+  const entries = [...(d.weight || [])].sort((a,b) => b.date.localeCompare(a.date)).slice(0, 15);
+  const el = document.getElementById('weight-entries');
+  if (!entries.length) {
+    el.innerHTML = '<div style="text-align:center;color:#ccc;padding:16px;font-size:13px">Записей пока нет</div>';
+    return;
+  }
+  el.innerHTML = entries.map((e, i) => `
+    <div class="weight-entry">
+      <span class="we-date">${formatDate(e.date)}</span>
+      <span class="we-val">${e.value} кг</span>
+      <button class="we-del" onclick="deleteWeight(${i})" title="Удалить">×</button>
+    </div>`).join('');
+}
+
+function saveWeight() {
+  const val = parseFloat(document.getElementById('w-value').value);
+  if (isNaN(val) || val < 20 || val > 300) { alert('Введите корректный вес (20–300 кг)'); return; }
+  const goalVal = parseFloat(document.getElementById('w-goal').value);
+  const d = initData();
+  const todayStr = today();
+  const idx = (d.weight || []).findIndex(x => x.date === todayStr);
+  if (idx >= 0) d.weight[idx].value = val; else d.weight.push({ date: todayStr, value: val });
+  if (!isNaN(goalVal) && goalVal > 0) d.weightGoal = goalVal;
+  setData(d);
+  document.getElementById('w-value').value = '';
+  renderWeight();
+}
+
+function deleteWeight(visibleIdx) {
+  if (!confirm('Удалить запись?')) return;
+  const d = initData();
+  const sorted = [...d.weight].sort((a,b) => b.date.localeCompare(a.date));
+  const toDelete = sorted[visibleIdx];
+  d.weight = d.weight.filter(e => !(e.date === toDelete.date && e.value === toDelete.value));
+  setData(d);
+  renderWeight();
+}
+
+// ─── Progress & History ──────────────────────────────────────────────────────
+function renderProgress() {
+  const d = initData();
+  renderCoachSection('coach-tips-section', d);
+  renderActivityGrid(d);
+  renderInsights(d);
+  renderHistory(d);
+}
+
+function renderActivityGrid(d) {
+  const days = Array.from({length: 28}, (_, i) => daysAgo(27 - i));
+  const todayStr = today();
+  const html = days.map(date => {
+    const hasW = d.completions.some(c => c.date === date);
+    const hasS = d.steps.some(s => s.date === date && s.count > 0);
+    const cls  = (hasW && hasS) ? 'both' : hasW ? 'has-workout' : hasS ? 'has-steps' : '';
+    const dt   = new Date(date + 'T00:00:00');
+    const dayN = dt.getDate();
+    return `<div class="week-cell ${cls}" title="${date}"><span class="week-cell-day">${dayN}</span></div>`;
+  }).join('');
+  document.getElementById('activity-grid').innerHTML = html;
+}
+
+function renderInsights(d) {
+  const streak = calcStreak(d);
+
+  // Week workouts
+  const thisWeek = Array.from({length:7}, (_, i) => daysAgo(6-i));
+  const lastWeek = Array.from({length:7}, (_, i) => daysAgo(13-i));
+  const twCount  = new Set(d.completions.filter(c => thisWeek.includes(c.date)).map(c=>c.date)).size;
+  const lwCount  = new Set(d.completions.filter(c => lastWeek.includes(c.date)).map(c=>c.date)).size;
+  const wDiff    = twCount - lwCount;
+  const wTrend   = wDiff > 0 ? `<span class="trend-up">▲ +${wDiff} vs прошлая неделя</span>`
+                 : wDiff < 0 ? `<span class="trend-down">▼ ${wDiff} vs прошлая неделя</span>`
+                 : `<span class="trend-flat">= как прошлая неделя</span>`;
+
+  // Steps trend
+  const twSteps = thisWeek.reduce((s,d2) => s + ((d.steps.find(x=>x.date===d2)||{count:0}).count), 0);
+  const lwSteps = lastWeek.reduce((s,d2) => s + ((d.steps.find(x=>x.date===d2)||{count:0}).count), 0);
+  const sDiff   = twSteps - lwSteps;
+  const sTrend  = sDiff > 0 ? `<span class="trend-up">▲ +${Math.round(sDiff/1000*10)/10}к</span>`
+                : sDiff < 0 ? `<span class="trend-down">▼ ${Math.round(sDiff/1000*10)/10}к</span>`
+                : `<span class="trend-flat">=</span>`;
+
+  // Weight trend
+  let wgtTrend = '—';
+  if (d.weight && d.weight.length >= 2) {
+    const ws   = [...d.weight].sort((a,b) => a.date.localeCompare(b.date));
+    const diff = ws[ws.length-1].value - ws[0].value;
+    wgtTrend = diff < 0
+      ? `<span class="trend-down">▼ ${Math.abs(diff).toFixed(1)} кг</span>`
+      : diff > 0
+      ? `<span class="trend-up">▲ +${diff.toFixed(1)} кг</span>`
+      : `<span class="trend-flat">стабильный</span>`;
+  }
+
+  // Total workouts
+  const total = new Set(d.completions.map(c => c.date + c.workoutId)).size;
+
+  document.getElementById('insights-grid').innerHTML = `
+    <div class="insight-card">
+      <div class="insight-title">Серия дней</div>
+      <div class="insight-value">${streak} 🔥</div>
+      <div class="insight-sub">дней активности подряд</div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-title">Тренировок на неделе</div>
+      <div class="insight-value">${twCount}</div>
+      <div class="insight-sub">${wTrend}</div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-title">Шаги за неделю</div>
+      <div class="insight-value">${Math.round(twSteps/1000*10)/10}к</div>
+      <div class="insight-sub">${sTrend}</div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-title">Вес — динамика</div>
+      <div class="insight-value" style="font-size:16px">${wgtTrend}</div>
+      <div class="insight-sub">за всё время</div>
+    </div>`;
+}
+
+function renderHistory(d) {
+  const list = document.getElementById('history-list');
+  if (!d.completions.length && !d.steps.some(s => s.count > 0)) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><p>История пуста</p></div>`;
+    return;
+  }
+  const allDates = [...new Set([
+    ...d.completions.map(c => c.date),
+    ...d.steps.filter(s => s.count > 0).map(s => s.date)
+  ])].sort((a,b) => b.localeCompare(a));
+
+  list.innerHTML = allDates.map(date => {
+    const comps = d.completions.filter(c => c.date === date);
+    const stepEntry = d.steps.find(s => s.date === date);
+    const items = comps.map(c => {
+      const w = d.workouts.find(x => x.id === c.workoutId);
+      return `<div class="history-item">
+        <span class="history-icon">${typeIcon(w?.type)}</span>
+        <span class="history-name">${escHtml(w?.name || 'Удалённая тренировка')}</span>
+        ${w?.duration ? `<span class="history-time">${w.duration} мин</span>` : ''}
+      </div>`;
+    }).join('');
+    const stepLine = stepEntry && stepEntry.count > 0
+      ? `<div class="history-item"><span class="history-icon">🚶</span><span class="history-name">Ходьба</span><span class="history-time">${stepEntry.count.toLocaleString('ru')} шагов</span></div>`
+      : '';
+    return `<div class="history-date">${formatDate(date)}</div>${items}${stepLine}`;
+  }).join('');
+}
+
+// ─── Tab switching ───────────────────────────────────────────────────────────
+function showTab(name, tabEl) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (tabEl) tabEl.classList.add('active');
+  if (name === 'steps')    renderSteps();
+  if (name === 'weight')   renderWeight();
+  if (name === 'progress') renderProgress();
+  if (name === 'settings') document.getElementById('import-status').textContent = '';
+}
+
+// ─── Export / Import ─────────────────────────────────────────────────────────
+function exportData() {
+  const d = getData();
+  const json = JSON.stringify(d, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const date = new Date().toISOString().slice(0, 10);
+  a.href     = url;
+  a.download = `тренировки-${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (!parsed.workouts && !parsed.steps && !parsed.weight) {
+        document.getElementById('import-status').innerHTML = '<span style="color:#ef4444">Неверный формат файла</span>';
+        return;
+      }
+      // Merge: keep existing data and add new, avoid duplicates
+      const existing = initData();
+      // Workouts: add new ones
+      const existingIds = new Set(existing.workouts.map(w => w.id));
+      (parsed.workouts || []).forEach(w => { if (!existingIds.has(w.id)) existing.workouts.push(w); });
+      // Completions: merge by workoutId+date
+      const existingComps = new Set(existing.completions.map(c => c.workoutId + c.date));
+      (parsed.completions || []).forEach(c => { if (!existingComps.has(c.workoutId + c.date)) existing.completions.push(c); });
+      // Steps: take imported if no local entry for that date
+      const existingStepDates = new Set(existing.steps.map(s => s.date));
+      (parsed.steps || []).forEach(s => { if (!existingStepDates.has(s.date)) existing.steps.push(s); });
+      // Weight: same
+      const existingWeightDates = new Set((existing.weight||[]).map(w => w.date));
+      (parsed.weight || []).forEach(w => { if (!existingWeightDates.has(w.date)) existing.weight.push(w); });
+      // Settings
+      if (parsed.stepGoal)    existing.stepGoal    = parsed.stepGoal;
+      if (parsed.weightGoal)  existing.weightGoal  = parsed.weightGoal;
+      setData(existing);
+      renderWorkouts();
+      document.getElementById('import-status').innerHTML = '<span style="color:#10b981">✓ Данные успешно загружены!</span>';
+      event.target.value = '';
+    } catch {
+      document.getElementById('import-status').innerHTML = '<span style="color:#ef4444">Ошибка чтения файла</span>';
+    }
+  };
+  reader.readAsText(file);
+}
+
+function clearAllData() {
+  if (!confirm('Удалить ВСЕ данные? Это нельзя отменить.')) return;
+  if (!confirm('Вы уверены? Все тренировки, шаги и вес будут удалены.')) return;
+  localStorage.removeItem('wt_data');
+  initData();
+  renderWorkouts();
+  alert('Данные удалены.');
+}
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+initData();
+renderWorkouts();
+window.addEventListener('resize', () => {
+  const d = getData();
+  if (document.getElementById('tab-weight').classList.contains('active')) renderWeightChart(d);
+});
+</script>
+</body>
+</html>
