@@ -189,6 +189,47 @@
   .empty-icon { font-size: 36px; margin-bottom: 8px; }
   .empty p { font-size: 13px; }
 
+  /* User modal */
+  .user-modal-overlay { position: fixed; inset: 0; background: rgba(30,0,60,0.7); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .user-modal-box { background: white; border-radius: 22px; padding: 28px 24px; max-width: 340px; width: 100%; text-align: center; }
+  .user-modal-box h2 { font-size: 18px; font-weight: 800; margin: 8px 0 6px; color: #1a1a2e; }
+  .user-modal-box p { font-size: 13px; color: #888; margin-bottom: 18px; line-height: 1.5; }
+  .user-list-btn { display: block; width: 100%; padding: 12px 16px; border: 1.5px solid #e5e7eb; border-radius: 12px; margin-bottom: 8px; text-align: left; cursor: pointer; font-size: 14px; font-weight: 600; background: white; transition: all 0.15s; }
+  .user-list-btn:hover { border-color: #7c3aed; background: #f5f3ff; color: #7c3aed; }
+  .user-divider { font-size: 12px; color: #ccc; margin: 10px 0; }
+  .user-chip { display: inline-flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.2); padding: 3px 10px 3px 7px; border-radius: 20px; font-size: 12px; cursor: pointer; transition: background 0.15s; border: none; color: white; font-weight: 600; }
+  .user-chip:hover { background: rgba(255,255,255,0.35); }
+
+  /* News cards */
+  .news-card { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f3f4f6; text-decoration: none; color: inherit; cursor: pointer; }
+  .news-card:last-child { border-bottom: none; padding-bottom: 0; }
+  .news-thumb { width: 76px; height: 76px; border-radius: 10px; object-fit: cover; background: linear-gradient(135deg,#f5f3ff,#ede9fe); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+  .news-body { flex: 1; min-width: 0; }
+  .news-title { font-size: 13px; font-weight: 700; line-height: 1.4; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .news-meta { font-size: 11px; color: #aaa; }
+  .news-source { display: inline-block; background: #f5f3ff; color: #7c3aed; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 6px; margin-bottom: 4px; }
+
+  /* Video cards */
+  .video-card { background: white; border-radius: 14px; overflow: hidden; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(124,58,237,0.07); }
+  .video-card-head { padding: 12px 14px 6px; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .video-card-title { font-size: 14px; font-weight: 700; flex: 1; }
+  .video-card-notes { font-size: 12px; color: #888; padding: 0 14px 12px; line-height: 1.5; }
+
+  /* Calendar strip */
+  .cal-strip { position: sticky; bottom: 0; background: white; border-top: 2px solid #ede9fe; padding: 10px 14px 12px; z-index: 200; box-shadow: 0 -4px 16px rgba(124,58,237,0.08); }
+  .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .cal-title { font-size: 13px; font-weight: 800; color: #1a1a2e; text-transform: capitalize; }
+  .cal-nav { background: none; border: none; font-size: 20px; cursor: pointer; color: #7c3aed; padding: 0 8px; line-height: 1; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .cal-day-label { font-size: 9px; color: #bbb; text-align: center; padding-bottom: 3px; font-weight: 600; }
+  .cal-cell { min-height: 36px; border-radius: 6px; padding: 3px 3px 2px; background: #fafafa; }
+  .cal-cell.today { background: #f5f3ff; outline: 2px solid #7c3aed; outline-offset: -1px; }
+  .cal-cell.has-workout { background: #ede9fe; cursor: pointer; }
+  .cal-cell.has-workout:hover { background: #ddd6fe; }
+  .cal-cell-num { font-weight: 700; font-size: 10px; color: #666; line-height: 1.2; }
+  .cal-cell.today .cal-cell-num { color: #7c3aed; }
+  .cal-workout-dot { display: block; color: #6d28d9; font-size: 7.5px; line-height: 1.4; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 100%; }
+
   @media (max-width: 420px) {
     .form-row { grid-template-columns: 1fr; }
     .stats-row { gap: 7px; }
@@ -198,13 +239,32 @@
 </head>
 <body>
 
+<!-- User selection modal -->
+<div id="user-modal" class="user-modal-overlay">
+  <div class="user-modal-box">
+    <div style="font-size:44px">👤</div>
+    <h2>Кто ты?</h2>
+    <p>Выбери своё имя — у каждого пользователя свой отдельный прогресс</p>
+    <div id="user-list-btns"></div>
+    <div class="user-divider">— или введи новое имя —</div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <input type="text" id="user-name-input" placeholder="Имя..." style="flex:1" onkeydown="if(event.key==='Enter')selectUser()" />
+      <button class="btn btn-primary" onclick="selectUser()">Войти</button>
+    </div>
+  </div>
+</div>
+
 <header>
-  <h1>💪 Мои тренировки <span class="sync-dot" id="sync-dot"></span><span class="sync-label" id="sync-label">подключение...</span></h1>
+  <h1>💪 Мои тренировки <span class="sync-dot" id="sync-dot"></span><span class="sync-label" id="sync-label">подключение...</span>
+    <button class="user-chip" onclick="openUserModal()" id="user-chip" style="margin-left:auto">👤 <span id="user-chip-name"></span></button>
+  </h1>
   <div class="tabs">
     <button class="tab active" onclick="showTab('workouts', this)">🏋️ Тренировки</button>
     <button class="tab" onclick="showTab('recipes', this)">🍽️ Рецепты</button>
     <button class="tab" onclick="showTab('steps', this)">🚶 Ходьба</button>
     <button class="tab" onclick="showTab('weight', this)">⚖️ Вес</button>
+    <button class="tab" onclick="showTab('videos', this)">🎬 Видео</button>
+    <button class="tab" onclick="showTab('news', this)">🌟 Интересное</button>
     <button class="tab" onclick="showTab('progress', this)">📊 Прогресс</button>
     <button class="tab" onclick="showTab('settings', this)">⚙️ Данные</button>
   </div>
@@ -390,6 +450,46 @@
     </div>
   </div>
 
+  <!-- ===== VIDEOS ===== -->
+  <div id="tab-videos" class="section">
+    <br>
+    <button class="toggle-form-btn" onclick="toggleVideoForm()" id="toggle-video-btn">+ Добавить видео</button>
+    <div id="add-video-form" style="display:none">
+      <div class="form-card">
+        <h3>Новое видео</h3>
+        <div class="form-group">
+          <label>Название</label>
+          <input type="text" id="v-title" placeholder="Например: Йога для похудения" />
+        </div>
+        <div class="form-group">
+          <label>Ссылка YouTube</label>
+          <input type="url" id="v-url" placeholder="https://youtube.com/watch?v=..." />
+        </div>
+        <div class="form-group">
+          <label>Заметки</label>
+          <textarea id="v-notes" placeholder="Описание или комментарий..."></textarea>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-primary" onclick="saveVideo()" style="flex:1">Сохранить</button>
+          <button class="btn btn-link" onclick="toggleVideoForm()">Отмена</button>
+        </div>
+      </div>
+    </div>
+    <div id="videos-list"></div>
+  </div>
+
+  <!-- ===== NEWS / ИНТЕРЕСНОЕ ===== -->
+  <div id="tab-news" class="section">
+    <br>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div style="font-size:15px;font-weight:800;color:#1a1a2e">🌟 Интересное в фитнесе</div>
+        <button class="btn btn-link" onclick="loadNews()" style="font-size:12px">🔄 Обновить</button>
+      </div>
+      <div id="news-list"><div class="empty"><div class="empty-icon">📰</div><p>Загрузка новостей...</p></div></div>
+    </div>
+  </div>
+
   <!-- ===== SETTINGS / DATA ===== -->
   <div id="tab-settings" class="section">
     <br>
@@ -424,6 +524,16 @@
 
 </main>
 
+<!-- Calendar strip -->
+<div class="cal-strip" id="cal-strip">
+  <div class="cal-header">
+    <button class="cal-nav" onclick="calShift(-1)">‹</button>
+    <div class="cal-title" id="cal-title"></div>
+    <button class="cal-nav" onclick="calShift(1)">›</button>
+  </div>
+  <div class="cal-grid" id="cal-grid"></div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script>
@@ -439,7 +549,61 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-const DATA_REF = db.ref('data');
+
+// ─── Multi-user ────────────────────────────────────────────────────────────
+const KNOWN_USERS_KEY = 'wt_known_users';
+let _currentUser = null;
+let _dataRef = null;
+let _fbListener = null;
+
+function getKnownUsers() { return JSON.parse(localStorage.getItem(KNOWN_USERS_KEY) || '[]'); }
+function addKnownUser(name) {
+  const users = getKnownUsers();
+  if (!users.includes(name)) { users.push(name); localStorage.setItem(KNOWN_USERS_KEY, JSON.stringify(users)); }
+}
+
+function openUserModal() {
+  const modal = document.getElementById('user-modal');
+  const btns  = document.getElementById('user-list-btns');
+  const known = getKnownUsers();
+  btns.innerHTML = known.map(u =>
+    `<button class="user-list-btn" onclick="applyUser('${escHtml(u)}')">${u === _currentUser ? '✓ ' : ''}${escHtml(u)}</button>`
+  ).join('');
+  document.getElementById('user-name-input').value = '';
+  modal.style.display = 'flex';
+}
+
+function selectUser() {
+  const name = document.getElementById('user-name-input').value.trim();
+  if (!name) return;
+  applyUser(name);
+}
+
+function applyUser(name) {
+  _currentUser = name;
+  localStorage.setItem('wt_user', name);
+  addKnownUser(name);
+  document.getElementById('user-modal').style.display = 'none';
+  document.getElementById('user-chip-name').textContent = name;
+  attachFirebase();
+  initData();
+  renderWorkouts();
+  renderCal();
+}
+
+function attachFirebase() {
+  if (_fbListener && _dataRef) _dataRef.off('value', _fbListener);
+  _dataRef = db.ref('users/' + _currentUser);
+  _fbListener = _dataRef.on('value', (snapshot) => {
+    if (_isSyncing) return;
+    const val = snapshot.val();
+    if (val) {
+      localStorage.setItem('wt_data_' + _currentUser, JSON.stringify(val));
+      refreshCurrentTab();
+      setSyncStatus('synced');
+    }
+  }, () => setSyncStatus('error'));
+}
 
 let _isSyncing = false;
 
@@ -452,12 +616,12 @@ function setSyncStatus(status) {
 }
 
 // ─── Storage ───────────────────────────────────────────────────────────────
-function getData() { return JSON.parse(localStorage.getItem('wt_data') || '{}'); }
+function getData() { return JSON.parse(localStorage.getItem('wt_data_' + _currentUser) || '{}'); }
 
 function setData(d) {
-  localStorage.setItem('wt_data', JSON.stringify(d));
+  localStorage.setItem('wt_data_' + _currentUser, JSON.stringify(d));
   setSyncStatus('syncing');
-  DATA_REF.set(d)
+  _dataRef.set(d)
     .then(() => setSyncStatus('synced'))
     .catch(() => setSyncStatus('error'));
 }
@@ -471,6 +635,7 @@ function initData() {
   if (!d.weight)      d.weight = [];
   if (!d.recipes)           d.recipes = [];
   if (!d.recipeCompletions) d.recipeCompletions = [];
+  if (!d.videos)            d.videos = [];
   if (!d.menuLoaded) {
     d.menuLoaded = true;
     const menuRecipes = [
@@ -1023,16 +1188,7 @@ const RECIPE_CATS = [
   { id: 'drinks',    label: 'Напитки',  icon: '🥤', bg: '#f0f9ff', border: '#38bdf8' },
 ];
 
-// ─── Real-time listener ────────────────────────────────────────────────────
-DATA_REF.on('value', (snapshot) => {
-  if (_isSyncing) return;
-  const val = snapshot.val();
-  if (val) {
-    localStorage.setItem('wt_data', JSON.stringify(val));
-    refreshCurrentTab();
-    setSyncStatus('synced');
-  }
-}, () => setSyncStatus('error'));
+// ─── Real-time listener — attached per user in attachFirebase() ─────────────
 
 function refreshCurrentTab() {
   const active = document.querySelector('.section.active');
@@ -1043,6 +1199,8 @@ function refreshCurrentTab() {
   if (id === 'tab-steps')    renderSteps();
   if (id === 'tab-weight')   renderWeight();
   if (id === 'tab-progress') renderProgress();
+  if (id === 'tab-videos')   renderVideos();
+  renderCal();
 }
 
 // ─── Utils ──────────────────────────────────────────────────────────────────
@@ -1279,6 +1437,7 @@ function markDone(id) {
     setData(d);
   }
   renderWorkouts();
+  renderCal();
 }
 
 function deleteWorkout(id) {
@@ -1938,18 +2097,6 @@ function renderHistory(d) {
 }
 
 // ─── Tab switching ───────────────────────────────────────────────────────────
-function showTab(name, tabEl) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('tab-' + name).classList.add('active');
-  if (tabEl) tabEl.classList.add('active');
-  if (name === 'recipes')  renderRecipes();
-  if (name === 'steps')    renderSteps();
-  if (name === 'weight')   renderWeight();
-  if (name === 'progress') renderProgress();
-  if (name === 'settings') document.getElementById('import-status').textContent = '';
-}
-
 // ─── Export / Import ─────────────────────────────────────────────────────────
 function exportData() {
   const d = getData();
@@ -2006,11 +2153,186 @@ function importData(event) {
 function clearAllData() {
   if (!confirm('Удалить ВСЕ данные? Это нельзя отменить.')) return;
   if (!confirm('Вы уверены? Все тренировки, шаги и вес будут удалены.')) return;
-  localStorage.removeItem('wt_data');
-  DATA_REF.remove();
+  localStorage.removeItem('wt_data_' + _currentUser);
+  _dataRef.remove();
   initData();
   renderWorkouts();
   alert('Данные удалены.');
+}
+
+// ─── Videos ──────────────────────────────────────────────────────────────────
+function toggleVideoForm() {
+  const f = document.getElementById('add-video-form');
+  const b = document.getElementById('toggle-video-btn');
+  const open = f.style.display === 'block';
+  f.style.display = open ? 'none' : 'block';
+  b.textContent = open ? '+ Добавить видео' : '✕ Отмена';
+}
+
+function saveVideo() {
+  const title = document.getElementById('v-title').value.trim();
+  const url   = document.getElementById('v-url').value.trim();
+  const notes = document.getElementById('v-notes').value.trim();
+  if (!title || !url) { alert('Введи название и ссылку'); return; }
+  const d = initData();
+  d.videos.push({ id: uid(), title, url, notes, addedAt: today() });
+  setData(d);
+  ['v-title','v-url','v-notes'].forEach(id => document.getElementById(id).value = '');
+  toggleVideoForm();
+  renderVideos();
+}
+
+function deleteVideo(id) {
+  if (!confirm('Удалить видео?')) return;
+  const d = initData();
+  d.videos = d.videos.filter(v => v.id !== id);
+  setData(d);
+  renderVideos();
+}
+
+function renderVideos() {
+  const d = initData();
+  const list = document.getElementById('videos-list');
+  if (!list) return;
+  if (!d.videos.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">🎬</div><p>Добавь интересные видео про похудение и фитнес</p></div>`;
+    return;
+  }
+  list.innerHTML = d.videos.map(v => {
+    const ytId = getYouTubeId(v.url);
+    const embed = ytId
+      ? `<div class="yt-iframe-wrap"><iframe src="https://www.youtube.com/embed/${ytId}" allowfullscreen loading="lazy"></iframe></div>`
+      : `<div style="padding:0 14px 12px"><a href="${escHtml(v.url)}" target="_blank" class="btn btn-link" style="font-size:12px">▶ Открыть видео</a></div>`;
+    return `<div class="video-card">
+      <div class="video-card-head">
+        <div class="video-card-title">${escHtml(v.title)}</div>
+        <button class="btn btn-danger" onclick="deleteVideo('${v.id}')">🗑</button>
+      </div>
+      ${v.notes ? `<div class="video-card-notes">${escHtml(v.notes)}</div>` : ''}
+      ${embed}
+    </div>`;
+  }).join('');
+}
+
+// ─── News ─────────────────────────────────────────────────────────────────────
+const NEWS_FEEDS = [
+  { url: 'https://www.womenshealthmag.com/rss/all.xml/', label: 'Women\'s Health', emoji: '💪' },
+  { url: 'https://www.self.com/feed/rss', label: 'Self', emoji: '🌿' },
+  { url: 'https://www.shape.com/feeds/all/rss.xml', label: 'Shape', emoji: '✨' },
+];
+
+async function loadNews() {
+  const container = document.getElementById('news-list');
+  if (!container) return;
+  container.innerHTML = `<div class="empty"><div class="empty-icon">⏳</div><p>Загружаем новости...</p></div>`;
+  const allItems = [];
+  await Promise.all(NEWS_FEEDS.map(async feed => {
+    try {
+      const resp = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}&count=5`);
+      const data = await resp.json();
+      if (data.items) {
+        data.items.forEach(item => allItems.push({ ...item, _source: feed.label, _emoji: feed.emoji }));
+      }
+    } catch(e) {}
+  }));
+  if (!allItems.length) {
+    container.innerHTML = `<div class="empty"><div class="empty-icon">📡</div><p>Не удалось загрузить новости.<br>Проверь подключение к интернету.</p></div>`;
+    return;
+  }
+  allItems.sort((a,b) => new Date(b.pubDate) - new Date(a.pubDate));
+  container.innerHTML = allItems.slice(0, 15).map(item => {
+    const date = item.pubDate ? new Date(item.pubDate).toLocaleDateString('ru-RU', { day:'numeric', month:'long' }) : '';
+    const thumb = item.thumbnail || item.enclosure?.link || '';
+    const thumbEl = thumb
+      ? `<img class="news-thumb" src="${escHtml(thumb)}" onerror="this.style.display='none'" loading="lazy" />`
+      : `<div class="news-thumb">${item._emoji}</div>`;
+    return `<a class="news-card" href="${escHtml(item.link)}" target="_blank" rel="noopener">
+      ${thumbEl}
+      <div class="news-body">
+        <div class="news-source">${item._source}</div>
+        <div class="news-title">${escHtml(item.title)}</div>
+        <div class="news-meta">${date}</div>
+      </div>
+    </a>`;
+  }).join('');
+}
+
+// ─── Tab switching ───────────────────────────────────────────────────────────
+function showTab(name, tabEl) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (tabEl) tabEl.classList.add('active');
+  if (name === 'recipes')  renderRecipes();
+  if (name === 'steps')    renderSteps();
+  if (name === 'weight')   renderWeight();
+  if (name === 'progress') renderProgress();
+  if (name === 'videos')   renderVideos();
+  if (name === 'news')     loadNews();
+  if (name === 'settings') document.getElementById('import-status').textContent = '';
+}
+
+// ─── Calendar ────────────────────────────────────────────────────────────────
+let _calYear  = new Date().getFullYear();
+let _calMonth = new Date().getMonth();
+
+function calShift(dir) {
+  _calMonth += dir;
+  if (_calMonth > 11) { _calMonth = 0; _calYear++; }
+  if (_calMonth < 0)  { _calMonth = 11; _calYear--; }
+  renderCal();
+}
+
+function renderCal() {
+  const calGrid  = document.getElementById('cal-grid');
+  const calTitle = document.getElementById('cal-title');
+  if (!calGrid) return;
+  const d = initData();
+  const todayStr = today();
+
+  // Build map: date -> [workoutName, ...]
+  const map = {};
+  d.completions.forEach(c => {
+    if (!map[c.date]) map[c.date] = [];
+    const w = d.workouts.find(w => w.id === c.workoutId);
+    if (w && !map[c.date].includes(w.name)) map[c.date].push(w.name);
+  });
+
+  const year = _calYear, month = _calMonth;
+  calTitle.textContent = new Date(year, month, 1).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+
+  const firstDow  = new Date(year, month, 1).getDay();
+  const startOff  = (firstDow + 6) % 7; // Monday-based
+  const daysInMon = new Date(year, month + 1, 0).getDate();
+  const dayLabels = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+
+  let html = dayLabels.map(l => `<div class="cal-day-label">${l}</div>`).join('');
+  for (let i = 0; i < startOff; i++) html += `<div></div>`;
+  for (let day = 1; day <= daysInMon; day++) {
+    const mm      = String(month + 1).padStart(2, '0');
+    const dd      = String(day).padStart(2, '0');
+    const dateStr = `${year}-${mm}-${dd}`;
+    const names   = map[dateStr] || [];
+    const isToday = dateStr === todayStr;
+    const hasW    = names.length > 0;
+    const cls     = ['cal-cell', isToday ? 'today' : '', hasW ? 'has-workout' : ''].filter(Boolean).join(' ');
+    const click   = hasW ? `onclick="calDayClick('${dateStr}')"` : '';
+    html += `<div class="${cls}" ${click}>
+      <div class="cal-cell-num">${day}</div>
+      ${names.slice(0, 2).map(n => `<span class="cal-workout-dot">${escHtml(n)}</span>`).join('')}
+    </div>`;
+  }
+  calGrid.innerHTML = html;
+}
+
+function calDayClick(dateStr) {
+  const d = initData();
+  const names = d.completions
+    .filter(c => c.date === dateStr)
+    .map(c => { const w = d.workouts.find(w => w.id === c.workoutId); return w ? w.name : null; })
+    .filter(Boolean);
+  const fmt = new Date(dateStr + 'T00:00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+  if (names.length) alert(`${fmt}\n\n` + names.map(n => '• ' + n).join('\n'));
 }
 
 // ─── PWA Service Worker ──────────────────────────────────────────────────────
@@ -2019,8 +2341,21 @@ if ('serviceWorker' in navigator) {
 }
 
 // ─── Init ────────────────────────────────────────────────────────────────────
-initData();
-renderWorkouts();
+(function init() {
+  const saved = localStorage.getItem('wt_user');
+  if (saved) {
+    _currentUser = saved;
+    document.getElementById('user-chip-name').textContent = saved;
+    document.getElementById('user-modal').style.display = 'none';
+    attachFirebase();
+    initData();
+    renderWorkouts();
+    renderCal();
+  } else {
+    openUserModal();
+  }
+})();
+
 window.addEventListener('resize', () => {
   const d = getData();
   if (document.getElementById('tab-weight').classList.contains('active')) renderWeightChart(d);
