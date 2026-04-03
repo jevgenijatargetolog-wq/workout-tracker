@@ -1227,9 +1227,15 @@ function renderWorkouts(openCatId) {
 }
 
 function toggleCat(id) {
-  document.getElementById('cat-' + id).classList.toggle('open');
-  if (_openWorkoutCats.has(id)) _openWorkoutCats.delete(id);
-  else _openWorkoutCats.add(id);
+  const isOpen = _openWorkoutCats.has(id);
+  // close all
+  _openWorkoutCats.forEach(cid => document.getElementById('cat-' + cid).classList.remove('open'));
+  _openWorkoutCats.clear();
+  // open clicked one (unless it was already open)
+  if (!isOpen) {
+    document.getElementById('cat-' + id).classList.add('open');
+    _openWorkoutCats.add(id);
+  }
 }
 
 function renderWorkoutMiniChart(workoutId, completions) {
@@ -1486,9 +1492,15 @@ function renderRecipeChart(recipeId, completions) {
 }
 
 function toggleRcat(id) {
-  document.getElementById('rcat-' + id).classList.toggle('open');
-  if (_openRecipeCats.has(id)) _openRecipeCats.delete(id);
-  else _openRecipeCats.add(id);
+  const isOpen = _openRecipeCats.has(id);
+  // close all
+  _openRecipeCats.forEach(cid => document.getElementById('rcat-' + cid).classList.remove('open'));
+  _openRecipeCats.clear();
+  // open clicked one (unless it was already open)
+  if (!isOpen) {
+    document.getElementById('rcat-' + id).classList.add('open');
+    _openRecipeCats.add(id);
+  }
 }
 
 function saveRecipe() {
