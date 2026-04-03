@@ -585,10 +585,47 @@ function applyUser(name) {
   addKnownUser(name);
   document.getElementById('user-modal').style.display = 'none';
   document.getElementById('user-chip-name').textContent = name;
-  attachFirebase();
-  initData();
-  renderWorkouts();
-  renderCal();
+  migrateOldData(name);
+}
+
+function migrateOldData(name) {
+  // Check if new user path already has data
+  db.ref('users/' + name).once('value', snap => {
+    if (snap.val()) {
+      // Already migrated, just attach
+      attachFirebase();
+      initData();
+      renderWorkouts();
+      renderCal();
+      return;
+    }
+    // Try to copy from old 'data' path
+    db.ref('data').once('value', oldSnap => {
+      const oldVal = oldSnap.val();
+      if (oldVal && oldVal.workouts && oldVal.workouts.length > 0) {
+        // Copy old data to new user path
+        db.ref('users/' + name).set(oldVal).then(() => {
+          localStorage.setItem('wt_data_' + name, JSON.stringify(oldVal));
+          attachFirebase();
+          initData();
+          renderWorkouts();
+          renderCal();
+        });
+      } else {
+        // No old data — also check localStorage wt_data
+        const lsOld = localStorage.getItem('wt_data');
+        if (lsOld) {
+          const parsed = JSON.parse(lsOld);
+          localStorage.setItem('wt_data_' + name, lsOld);
+          db.ref('users/' + name).set(parsed);
+        }
+        attachFirebase();
+        initData();
+        renderWorkouts();
+        renderCal();
+      }
+    });
+  });
 }
 
 function attachFirebase() {
