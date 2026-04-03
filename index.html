@@ -216,19 +216,36 @@
   .video-card-notes { font-size: 12px; color: #888; padding: 0 14px 12px; line-height: 1.5; }
 
   /* Calendar strip */
-  .cal-strip { position: sticky; bottom: 0; background: white; border-top: 2px solid #ede9fe; padding: 10px 14px 12px; z-index: 200; box-shadow: 0 -4px 16px rgba(124,58,237,0.08); }
+  .cal-strip { position: sticky; bottom: 0; background: linear-gradient(180deg,#faf8ff 0%,white 100%); border-top: 2px solid #ede9fe; padding: 10px 14px 14px; z-index: 200; box-shadow: 0 -6px 24px rgba(124,58,237,0.12); }
   .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-  .cal-title { font-size: 13px; font-weight: 800; color: #1a1a2e; text-transform: capitalize; }
-  .cal-nav { background: none; border: none; font-size: 20px; cursor: pointer; color: #7c3aed; padding: 0 8px; line-height: 1; }
-  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
-  .cal-day-label { font-size: 9px; color: #bbb; text-align: center; padding-bottom: 3px; font-weight: 600; }
-  .cal-cell { min-height: 36px; border-radius: 6px; padding: 3px 3px 2px; background: #fafafa; }
-  .cal-cell.today { background: #f5f3ff; outline: 2px solid #7c3aed; outline-offset: -1px; }
-  .cal-cell.has-workout { background: #ede9fe; cursor: pointer; }
-  .cal-cell.has-workout:hover { background: #ddd6fe; }
-  .cal-cell-num { font-weight: 700; font-size: 10px; color: #666; line-height: 1.2; }
+  .cal-title { font-size: 13px; font-weight: 800; color: #7c3aed; text-transform: capitalize; letter-spacing: 0.3px; }
+  .cal-nav { background: #f5f3ff; border: none; font-size: 16px; cursor: pointer; color: #7c3aed; padding: 4px 10px; border-radius: 8px; line-height: 1; transition: background 0.15s; }
+  .cal-nav:hover { background: #ede9fe; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+  .cal-day-label { font-size: 9px; color: #c4b5fd; text-align: center; padding-bottom: 4px; font-weight: 700; letter-spacing: 0.3px; }
+  .cal-cell { min-height: 38px; border-radius: 8px; padding: 3px 4px 2px; background: #fafafa; transition: transform 0.12s, background 0.15s; }
+  .cal-cell.today { background: linear-gradient(135deg,#f5f3ff,#ede9fe); outline: 2px solid #7c3aed; outline-offset: -1px; }
+  .cal-cell.has-workout { background: linear-gradient(135deg,#ede9fe,#ddd6fe); cursor: pointer; }
+  .cal-cell.has-workout:hover { transform: scale(1.06); background: linear-gradient(135deg,#ddd6fe,#c4b5fd); }
+  .cal-cell.has-workout:active { transform: scale(0.96); }
+  .cal-cell-num { font-weight: 800; font-size: 10px; color: #888; line-height: 1.3; }
   .cal-cell.today .cal-cell-num { color: #7c3aed; }
-  .cal-workout-dot { display: block; color: #6d28d9; font-size: 7.5px; line-height: 1.4; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 100%; }
+  .cal-cell.has-workout .cal-cell-num { color: #5b21b6; }
+  .cal-workout-dot { display: block; color: #6d28d9; font-size: 7px; line-height: 1.4; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 100%; }
+  /* Calendar day popup */
+  .cal-popup-overlay { position: fixed; inset: 0; background: rgba(20,0,50,0.45); z-index: 500; display: flex; align-items: flex-end; animation: fadeIn 0.18s ease; }
+  .cal-popup-box { background: white; border-radius: 22px 22px 0 0; padding: 20px 20px 32px; width: 100%; max-height: 70vh; overflow-y: auto; animation: slideUp 0.22s cubic-bezier(0.34,1.56,0.64,1); }
+  .cal-popup-date { font-size: 16px; font-weight: 800; color: #7c3aed; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .cal-popup-item { display: flex; align-items: center; gap: 10px; padding: 11px 14px; background: #f5f3ff; border-radius: 12px; margin-bottom: 8px; cursor: pointer; transition: background 0.15s; text-decoration: none; }
+  .cal-popup-item:hover { background: #ede9fe; }
+  .cal-popup-icon { font-size: 20px; }
+  .cal-popup-name { font-size: 14px; font-weight: 600; color: #1a1a2e; flex: 1; }
+  .cal-popup-link { font-size: 12px; color: #7c3aed; font-weight: 600; }
+  .cal-popup-close { float: right; background: #f3f4f6; border: none; border-radius: 50%; width: 30px; height: 30px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes calFadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+  .cal-grid { animation: calFadeIn 0.2s ease; }
 
   @media (max-width: 420px) {
     .form-row { grid-template-columns: 1fr; }
@@ -1206,15 +1223,15 @@ function initData() {
 
 // ─── Categories ────────────────────────────────────────────────────────────
 const WORKOUT_CATS = [
-  { id: 'morning',  label: 'Зарядка',                icon: '🌅', bg: '#fef9c3', border: '#fde047' },
-  { id: 'abs',      label: 'Упражнения на пресс',    icon: '🔥', bg: '#fff7ed', border: '#fb923c' },
-  { id: 'rest',     label: 'Тренировка · Отдых',     icon: '🧘', bg: '#f0fdf4', border: '#4ade80' },
-  { id: 'period',   label: 'В критические дни',      icon: '🌸', bg: '#fdf2f8', border: '#e879f9' },
-  { id: 'face',     label: 'Массаж лица',            icon: '✨', bg: '#f5f3ff', border: '#a78bfa' },
-  { id: 'strength', label: 'Силовые тренировки',     icon: '💪', bg: '#eff6ff', border: '#60a5fa' },
-  { id: 'aerobic',  label: 'Аэробные тренировки',    icon: '🏃', bg: '#ecfdf5', border: '#34d399' },
+  { id: 'morning',  label: 'Зарядка',                icon: '☀️',  bg: '#fef9c3', border: '#fde047' },
+  { id: 'abs',      label: 'Упражнения на пресс',    icon: '🔥',  bg: '#fff7ed', border: '#fb923c' },
+  { id: 'rest',     label: 'Тренировка · Отдых',     icon: '🌿',  bg: '#f0fdf4', border: '#4ade80' },
+  { id: 'period',   label: 'В критические дни',      icon: '🌙',  bg: '#fdf2f8', border: '#e879f9' },
+  { id: 'face',     label: 'Массаж лица',            icon: '💆‍♀️', bg: '#f5f3ff', border: '#a78bfa' },
+  { id: 'strength', label: 'Силовые тренировки',     icon: '💪',  bg: '#eff6ff', border: '#60a5fa' },
+  { id: 'aerobic',  label: 'Аэробные тренировки',    icon: '🏃‍♀️', bg: '#ecfdf5', border: '#34d399' },
   { id: 'yoga',     label: 'Йога',                   icon: '🧘‍♀️', bg: '#fdf4ff', border: '#d946ef' },
-  { id: 'women',   label: 'Женская практика',       icon: '🌸', bg: '#fdf2f8', border: '#f472b6' },
+  { id: 'women',    label: 'Женская практика',       icon: '🌸',  bg: '#fdf2f8', border: '#f472b6' },
 ];
 
 const RECIPE_CATS = [
@@ -2364,12 +2381,36 @@ function renderCal() {
 
 function calDayClick(dateStr) {
   const d = initData();
-  const names = d.completions
+  const items = d.completions
     .filter(c => c.date === dateStr)
-    .map(c => { const w = d.workouts.find(w => w.id === c.workoutId); return w ? w.name : null; })
+    .map(c => d.workouts.find(w => w.id === c.workoutId))
     .filter(Boolean);
-  const fmt = new Date(dateStr + 'T00:00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
-  if (names.length) alert(`${fmt}\n\n` + names.map(n => '• ' + n).join('\n'));
+  if (!items.length) return;
+
+  const fmt = new Date(dateStr + 'T00:00:00').toLocaleDateString('ru-RU', { weekday:'long', day:'numeric', month:'long' });
+  const rows = items.map(w => {
+    const cat = WORKOUT_CATS.find(c => c.id === (w.category || w.type)) || WORKOUT_CATS[0];
+    const link = w.url
+      ? `<a href="${escHtml(w.url)}" target="_blank" class="cal-popup-link">▶ Открыть</a>`
+      : '';
+    return `<div class="cal-popup-item" style="border-left:3px solid ${cat.border}">
+      <span class="cal-popup-icon">${cat.icon}</span>
+      <span class="cal-popup-name">${escHtml(w.name)}</span>
+      ${link}
+    </div>`;
+  }).join('');
+
+  const overlay = document.createElement('div');
+  overlay.className = 'cal-popup-overlay';
+  overlay.innerHTML = `<div class="cal-popup-box">
+    <div class="cal-popup-date">
+      📅 ${fmt}
+      <button class="cal-popup-close" onclick="this.closest('.cal-popup-overlay').remove()">✕</button>
+    </div>
+    ${rows}
+  </div>`;
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
 }
 
 // ─── PWA Service Worker ──────────────────────────────────────────────────────
