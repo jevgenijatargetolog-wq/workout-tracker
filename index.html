@@ -464,7 +464,8 @@ function initData() {
   if (!d.steps)       d.steps = [];
   if (!d.stepGoal)    d.stepGoal = 10000;
   if (!d.weight)      d.weight = [];
-  if (!d.recipes)     d.recipes = [];
+  if (!d.recipes)           d.recipes = [];
+  if (!d.recipeCompletions) d.recipeCompletions = [];
   if (!d.menuLoaded) {
     d.menuLoaded = true;
     const menuRecipes = [
@@ -866,21 +867,29 @@ function renderRecipes(openCatId) {
   list.innerHTML = RECIPE_CATS.map(cat => {
     const catRecipes = d.recipes.filter(r => r.category === cat.id);
     if (!catRecipes.length) return '';
-    const cards = catRecipes.map(r => `
+    const cards = catRecipes.map(r => {
+      const cookedToday = d.recipeCompletions.some(c => c.recipeId === r.id && c.date === today());
+      return `
       <div class="recipe-card">
         <div class="card-title">${escHtml(r.name)}</div>
         <div class="card-meta">
           ${r.calories ? `<span>🔥 ${r.calories} ккал</span>` : ''}
           ${r.time ? `<span>⏱ ${r.time} мин</span>` : ''}
+          ${cookedToday ? '<span class="done-badge">✓ Приготовлено сегодня</span>' : ''}
         </div>
         ${r.ingredients ? `<div class="recipe-section-label">Ингредиенты</div><div class="recipe-body">${escHtml(r.ingredients)}</div>` : ''}
         ${r.steps ? `<div class="recipe-section-label">Приготовление</div><div class="recipe-body">${escHtml(r.steps)}</div>` : ''}
         ${r.notes ? `<div class="recipe-section-label">Заметки</div><div class="recipe-body">${escHtml(r.notes)}</div>` : ''}
         <div class="card-actions" style="margin-top:10px">
+          ${cookedToday
+            ? `<button class="btn btn-done">✓ Приготовлено</button>`
+            : `<button class="btn btn-success" onclick="markRecipeDone('${r.id}')">✓ Приготовила</button>`}
           <button class="btn btn-link" onclick="editRecipe('${r.id}')">✏️ Изменить</button>
           <button class="btn btn-danger" onclick="deleteRecipe('${r.id}')">🗑 Удалить</button>
         </div>
-      </div>`).join('');
+        ${renderRecipeChart(r.id, d.recipeCompletions)}
+      </div>`;
+    }).join('');
     return `<div class="cat-section ${openCats.has(cat.id) ? 'open' : ''}" id="rcat-${cat.id}">
       <div class="cat-header" style="background:${cat.bg};border-left:4px solid ${cat.border}" onclick="toggleRcat('${cat.id}')">
         <span class="cat-icon">${cat.icon}</span>
@@ -891,6 +900,43 @@ function renderRecipes(openCatId) {
       <div class="cat-body">${cards}</div>
     </div>`;
   }).join('');
+}
+
+function markRecipeDone(id) {
+  const d = initData();
+  const todayStr = today();
+  if (!d.recipeCompletions.some(c => c.recipeId === id && c.date === todayStr)) {
+    d.recipeCompletions.push({ recipeId: id, date: todayStr, ts: Date.now() });
+    setData(d);
+  }
+  renderRecipes();
+}
+
+function renderRecipeChart(recipeId, completions) {
+  const doneSet = new Set(completions.filter(c => c.recipeId === recipeId).map(c => c.date));
+  if (doneSet.size === 0) return '';
+  const todayStr = today();
+  const totalDays = 52 * 7;
+  const weekCounts = Array.from({length: 52}, (_, wi) =>
+    Array.from({length: 7}, (_, di) => daysAgo(totalDays - 1 - (wi * 7 + di)))
+      .filter(d => doneSet.has(d)).length
+  );
+  const cells = Array.from({length: totalDays}, (_, i) => {
+    const date = daysAgo(totalDays - 1 - i);
+    const done = doneSet.has(date);
+    const isToday = date === todayStr;
+    const week = Math.floor(i / 7);
+    const wc = weekCounts[week];
+    const level = !done ? '' : wc >= 6 ? ' l4' : wc >= 4 ? ' l3' : wc >= 2 ? ' l2' : ' l1';
+    return `<div class="year-cell${level}${isToday ? ' today' : ''}" title="${date}"></div>`;
+  }).join('');
+  return `<div class="year-chart">
+    <div class="year-chart-header">
+      <span class="year-chart-label">приготовлено за год</span>
+      <span class="year-chart-count">${doneSet.size} раз</span>
+    </div>
+    <div class="year-grid">${cells}</div>
+  </div>`;
 }
 
 function toggleRcat(id) {
