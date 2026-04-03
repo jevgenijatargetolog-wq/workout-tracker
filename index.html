@@ -215,37 +215,33 @@
   .video-card-title { font-size: 14px; font-weight: 700; flex: 1; }
   .video-card-notes { font-size: 12px; color: #888; padding: 0 14px 12px; line-height: 1.5; }
 
-  /* Calendar strip */
-  .cal-strip { position: sticky; bottom: 0; background: linear-gradient(180deg,#faf8ff 0%,white 100%); border-top: 2px solid #ede9fe; padding: 10px 14px 14px; z-index: 200; box-shadow: 0 -6px 24px rgba(124,58,237,0.12); }
-  .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-  .cal-title { font-size: 13px; font-weight: 800; color: #7c3aed; text-transform: capitalize; letter-spacing: 0.3px; }
-  .cal-nav { background: #f5f3ff; border: none; font-size: 16px; cursor: pointer; color: #7c3aed; padding: 4px 10px; border-radius: 8px; line-height: 1; transition: background 0.15s; }
+  /* Calendar in Progress tab */
+  .cal-header { display: flex; justify-content: space-between; align-items: center; }
+  .cal-title { font-size: 15px; font-weight: 800; color: #7c3aed; text-transform: capitalize; }
+  .cal-nav { background: #f5f3ff; border: none; font-size: 16px; cursor: pointer; color: #7c3aed; padding: 5px 12px; border-radius: 10px; line-height: 1; transition: background 0.15s; }
   .cal-nav:hover { background: #ede9fe; }
-  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
-  .cal-day-label { font-size: 9px; color: #c4b5fd; text-align: center; padding-bottom: 4px; font-weight: 700; letter-spacing: 0.3px; }
-  .cal-cell { min-height: 38px; border-radius: 8px; padding: 3px 4px 2px; background: #fafafa; transition: transform 0.12s, background 0.15s; }
-  .cal-cell.today { background: linear-gradient(135deg,#f5f3ff,#ede9fe); outline: 2px solid #7c3aed; outline-offset: -1px; }
-  .cal-cell.has-workout { background: linear-gradient(135deg,#ede9fe,#ddd6fe); cursor: pointer; }
-  .cal-cell.has-workout:hover { transform: scale(1.06); background: linear-gradient(135deg,#ddd6fe,#c4b5fd); }
-  .cal-cell.has-workout:active { transform: scale(0.96); }
-  .cal-cell-num { font-weight: 800; font-size: 10px; color: #888; line-height: 1.3; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; animation: calFadeIn 0.22s ease; }
+  .cal-day-label { font-size: 10px; color: #c4b5fd; text-align: center; padding-bottom: 5px; font-weight: 700; }
+  .cal-cell { min-height: 48px; border-radius: 10px; padding: 5px 5px 3px; background: #f8f7ff; transition: transform 0.12s, background 0.15s; border: 1.5px solid transparent; }
+  .cal-cell.other-month { opacity: 0.3; }
+  .cal-cell.today { background: linear-gradient(135deg,#f5f3ff,#ede9fe); border-color: #7c3aed; }
+  .cal-cell.has-steps { background: #f0eeff; }
+  .cal-cell.has-workout { background: linear-gradient(135deg,#ede9fe,#ddd6fe); cursor: pointer; border-color: #c4b5fd; }
+  .cal-cell.has-workout:hover { transform: scale(1.04); background: linear-gradient(135deg,#ddd6fe,#c4b5fd); border-color: #7c3aed; }
+  .cal-cell.has-workout:active { transform: scale(0.97); }
+  .cal-cell.selected { border-color: #7c3aed; box-shadow: 0 0 0 2px #7c3aed44; }
+  .cal-cell-num { font-weight: 800; font-size: 11px; color: #999; line-height: 1.3; }
   .cal-cell.today .cal-cell-num { color: #7c3aed; }
   .cal-cell.has-workout .cal-cell-num { color: #5b21b6; }
-  .cal-workout-dot { display: block; color: #6d28d9; font-size: 7px; line-height: 1.4; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 100%; }
-  /* Calendar day popup */
-  .cal-popup-overlay { position: fixed; inset: 0; background: rgba(20,0,50,0.45); z-index: 500; display: flex; align-items: flex-end; animation: fadeIn 0.18s ease; }
-  .cal-popup-box { background: white; border-radius: 22px 22px 0 0; padding: 20px 20px 32px; width: 100%; max-height: 70vh; overflow-y: auto; animation: slideUp 0.22s cubic-bezier(0.34,1.56,0.64,1); }
-  .cal-popup-date { font-size: 16px; font-weight: 800; color: #7c3aed; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
-  .cal-popup-item { display: flex; align-items: center; gap: 10px; padding: 11px 14px; background: #f5f3ff; border-radius: 12px; margin-bottom: 8px; cursor: pointer; transition: background 0.15s; text-decoration: none; }
-  .cal-popup-item:hover { background: #ede9fe; }
-  .cal-popup-icon { font-size: 20px; }
-  .cal-popup-name { font-size: 14px; font-weight: 600; color: #1a1a2e; flex: 1; }
-  .cal-popup-link { font-size: 12px; color: #7c3aed; font-weight: 600; }
-  .cal-popup-close { float: right; background: #f3f4f6; border: none; border-radius: 50%; width: 30px; height: 30px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-  @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes calFadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
-  .cal-grid { animation: calFadeIn 0.2s ease; }
+  .cal-workout-dot { display: block; font-size: 7px; color: #6d28d9; line-height: 1.5; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  /* Day detail panel */
+  .cal-detail { background: #f5f3ff; border-radius: 14px; padding: 14px; animation: calFadeIn 0.18s ease; }
+  .cal-detail-title { font-size: 13px; font-weight: 800; color: #7c3aed; margin-bottom: 10px; }
+  .cal-detail-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: white; border-radius: 10px; margin-bottom: 7px; border-left: 3px solid #7c3aed; }
+  .cal-detail-icon { font-size: 18px; }
+  .cal-detail-name { font-size: 13px; font-weight: 600; flex: 1; color: #1a1a2e; }
+  .cal-detail-link { font-size: 12px; color: #7c3aed; font-weight: 600; text-decoration: none; }
+  @keyframes calFadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
 
   @media (max-width: 420px) {
     .form-row { grid-template-columns: 1fr; }
@@ -450,9 +446,14 @@
     <br>
     <div id="coach-tips-section"></div>
 
-    <div class="card">
-      <div class="chart-title">Активность за 4 недели</div>
-      <div class="week-grid" id="activity-grid"></div>
+    <div class="card" id="progress-cal-card">
+      <div class="cal-header" style="margin-bottom:10px">
+        <button class="cal-nav" onclick="calShift(-1)">‹</button>
+        <div class="cal-title" id="cal-title" style="font-size:15px"></div>
+        <button class="cal-nav" onclick="calShift(1)">›</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div id="cal-day-detail" style="margin-top:12px"></div>
       <div style="display:flex;gap:14px;margin-top:10px;font-size:11px;color:#888">
         <span><span style="display:inline-block;width:10px;height:10px;background:#7c3aed;border-radius:2px;margin-right:4px"></span>Тренировка</span>
         <span><span style="display:inline-block;width:10px;height:10px;background:#ddd6fe;border-radius:2px;margin-right:4px"></span>Только шаги</span>
@@ -541,16 +542,6 @@
 
 </main>
 
-<!-- Calendar strip -->
-<div class="cal-strip" id="cal-strip">
-  <div class="cal-header">
-    <button class="cal-nav" onclick="calShift(-1)">‹</button>
-    <div class="cal-title" id="cal-title"></div>
-    <button class="cal-nav" onclick="calShift(1)">›</button>
-  </div>
-  <div class="cal-grid" id="cal-grid"></div>
-</div>
-
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script>
@@ -613,7 +604,7 @@ function migrateOldData(name) {
       attachFirebase();
       initData();
       renderWorkouts();
-      renderCal();
+
       return;
     }
     // Try to copy from old 'data' path
@@ -626,7 +617,7 @@ function migrateOldData(name) {
           attachFirebase();
           initData();
           renderWorkouts();
-          renderCal();
+
         });
       } else {
         // No old data — also check localStorage wt_data
@@ -639,7 +630,7 @@ function migrateOldData(name) {
         attachFirebase();
         initData();
         renderWorkouts();
-        renderCal();
+
       }
     });
   });
@@ -1254,7 +1245,7 @@ function refreshCurrentTab() {
   if (id === 'tab-weight')   renderWeight();
   if (id === 'tab-progress') renderProgress();
   if (id === 'tab-videos')   renderVideos();
-  renderCal();
+
 }
 
 // ─── Utils ──────────────────────────────────────────────────────────────────
@@ -1491,7 +1482,7 @@ function markDone(id) {
     setData(d);
   }
   renderWorkouts();
-  renderCal();
+
 }
 
 function deleteWorkout(id) {
@@ -2049,17 +2040,7 @@ function renderProgress() {
 }
 
 function renderActivityGrid(d) {
-  const days = Array.from({length: 28}, (_, i) => daysAgo(27 - i));
-  const todayStr = today();
-  const html = days.map(date => {
-    const hasW = d.completions.some(c => c.date === date);
-    const hasS = d.steps.some(s => s.date === date && s.count > 0);
-    const cls  = (hasW && hasS) ? 'both' : hasW ? 'has-workout' : hasS ? 'has-steps' : '';
-    const dt   = new Date(date + 'T00:00:00');
-    const dayN = dt.getDate();
-    return `<div class="week-cell ${cls}" title="${date}"><span class="week-cell-day">${dayN}</span></div>`;
-  }).join('');
-  document.getElementById('activity-grid').innerHTML = html;
+  renderCal(); // calendar replaces the old grid
 }
 
 function renderInsights(d) {
@@ -2337,6 +2318,8 @@ function calShift(dir) {
   renderCal();
 }
 
+let _calSelectedDate = null;
+
 function renderCal() {
   const calGrid  = document.getElementById('cal-grid');
   const calTitle = document.getElementById('cal-title');
@@ -2344,73 +2327,87 @@ function renderCal() {
   const d = initData();
   const todayStr = today();
 
-  // Build map: date -> [workoutName, ...]
-  const map = {};
+  // Build maps
+  const wMap = {};
   d.completions.forEach(c => {
-    if (!map[c.date]) map[c.date] = [];
+    if (!wMap[c.date]) wMap[c.date] = [];
     const w = d.workouts.find(w => w.id === c.workoutId);
-    if (w && !map[c.date].includes(w.name)) map[c.date].push(w.name);
+    if (w && !wMap[c.date].find(x => x.id === w.id)) wMap[c.date].push(w);
   });
+  const sMap = {};
+  d.steps.forEach(s => { if (s.count > 0) sMap[s.date] = true; });
 
   const year = _calYear, month = _calMonth;
   calTitle.textContent = new Date(year, month, 1).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
 
   const firstDow  = new Date(year, month, 1).getDay();
-  const startOff  = (firstDow + 6) % 7; // Monday-based
+  const startOff  = (firstDow + 6) % 7;
   const daysInMon = new Date(year, month + 1, 0).getDate();
-  const dayLabels = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 
-  let html = dayLabels.map(l => `<div class="cal-day-label">${l}</div>`).join('');
-  for (let i = 0; i < startOff; i++) html += `<div></div>`;
+  let html = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map(l => `<div class="cal-day-label">${l}</div>`).join('');
+  for (let i = 0; i < startOff; i++) html += `<div class="cal-cell other-month"></div>`;
   for (let day = 1; day <= daysInMon; day++) {
-    const mm      = String(month + 1).padStart(2, '0');
-    const dd      = String(day).padStart(2, '0');
-    const dateStr = `${year}-${mm}-${dd}`;
-    const names   = map[dateStr] || [];
-    const isToday = dateStr === todayStr;
-    const hasW    = names.length > 0;
-    const cls     = ['cal-cell', isToday ? 'today' : '', hasW ? 'has-workout' : ''].filter(Boolean).join(' ');
-    const click   = hasW ? `onclick="calDayClick('${dateStr}')"` : '';
-    html += `<div class="${cls}" ${click}>
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const workouts = wMap[dateStr] || [];
+    const hasW  = workouts.length > 0;
+    const hasS  = sMap[dateStr] || false;
+    const isSel = dateStr === _calSelectedDate;
+    const cls = ['cal-cell',
+      dateStr === todayStr ? 'today' : '',
+      hasW ? 'has-workout' : (hasS ? 'has-steps' : ''),
+      isSel ? 'selected' : ''
+    ].filter(Boolean).join(' ');
+    html += `<div class="${cls}" onclick="calDayClick('${dateStr}',event)">
       <div class="cal-cell-num">${day}</div>
-      ${names.slice(0, 2).map(n => `<span class="cal-workout-dot">${escHtml(n)}</span>`).join('')}
+      ${workouts.slice(0,2).map(w => `<span class="cal-workout-dot">· ${escHtml(w.name)}</span>`).join('')}
     </div>`;
   }
   calGrid.innerHTML = html;
+
+  if (_calSelectedDate) {
+    renderCalDetail(_calSelectedDate, wMap[_calSelectedDate] || []);
+  }
 }
 
-function calDayClick(dateStr) {
+function calDayClick(dateStr, e) {
   const d = initData();
-  const items = d.completions
-    .filter(c => c.date === dateStr)
-    .map(c => d.workouts.find(w => w.id === c.workoutId))
-    .filter(Boolean);
-  if (!items.length) return;
+  const wMap = {};
+  d.completions.forEach(c => {
+    if (!wMap[c.date]) wMap[c.date] = [];
+    const w = d.workouts.find(w => w.id === c.workoutId);
+    if (w && !wMap[c.date].find(x => x.id === w.id)) wMap[c.date].push(w);
+  });
 
+  if (_calSelectedDate === dateStr) {
+    _calSelectedDate = null;
+    e.currentTarget.classList.remove('selected');
+    document.getElementById('cal-day-detail').innerHTML = '';
+    return;
+  }
+  _calSelectedDate = dateStr;
+  document.querySelectorAll('.cal-cell.selected').forEach(el => el.classList.remove('selected'));
+  e.currentTarget.classList.add('selected');
+  renderCalDetail(dateStr, wMap[dateStr] || []);
+}
+
+function renderCalDetail(dateStr, workouts) {
+  const detail = document.getElementById('cal-day-detail');
+  if (!detail) return;
   const fmt = new Date(dateStr + 'T00:00:00').toLocaleDateString('ru-RU', { weekday:'long', day:'numeric', month:'long' });
-  const rows = items.map(w => {
-    const cat = WORKOUT_CATS.find(c => c.id === (w.category || w.type)) || WORKOUT_CATS[0];
-    const link = w.url
-      ? `<a href="${escHtml(w.url)}" target="_blank" class="cal-popup-link">▶ Открыть</a>`
-      : '';
-    return `<div class="cal-popup-item" style="border-left:3px solid ${cat.border}">
-      <span class="cal-popup-icon">${cat.icon}</span>
-      <span class="cal-popup-name">${escHtml(w.name)}</span>
+  if (!workouts.length) {
+    detail.innerHTML = `<div class="cal-detail"><div class="cal-detail-title">📅 ${fmt}</div><div style="font-size:13px;color:#aaa;padding:4px 0">Тренировок не было</div></div>`;
+    return;
+  }
+  const rows = workouts.map(w => {
+    const cat  = WORKOUT_CATS.find(c => c.id === (w.category || w.type)) || WORKOUT_CATS[0];
+    const link = w.url ? `<a href="${escHtml(w.url)}" target="_blank" class="cal-detail-link">▶ Открыть</a>` : '';
+    return `<div class="cal-detail-item" style="border-left-color:${cat.border}">
+      <span class="cal-detail-icon">${cat.icon}</span>
+      <span class="cal-detail-name">${escHtml(w.name)}</span>
       ${link}
     </div>`;
   }).join('');
-
-  const overlay = document.createElement('div');
-  overlay.className = 'cal-popup-overlay';
-  overlay.innerHTML = `<div class="cal-popup-box">
-    <div class="cal-popup-date">
-      📅 ${fmt}
-      <button class="cal-popup-close" onclick="this.closest('.cal-popup-overlay').remove()">✕</button>
-    </div>
-    ${rows}
-  </div>`;
-  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
-  document.body.appendChild(overlay);
+  detail.innerHTML = `<div class="cal-detail"><div class="cal-detail-title">📅 ${fmt}</div>${rows}</div>`;
 }
 
 // ─── PWA Service Worker ──────────────────────────────────────────────────────
