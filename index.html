@@ -200,15 +200,6 @@
   .user-chip { display: inline-flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.2); padding: 3px 10px 3px 7px; border-radius: 20px; font-size: 12px; cursor: pointer; transition: background 0.15s; border: none; color: white; font-weight: 600; }
   .user-chip:hover { background: rgba(255,255,255,0.35); }
 
-  /* News cards */
-  .news-card { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f3f4f6; text-decoration: none; color: inherit; cursor: pointer; }
-  .news-card:last-child { border-bottom: none; padding-bottom: 0; }
-  .news-thumb { width: 76px; height: 76px; border-radius: 10px; object-fit: cover; background: linear-gradient(135deg,#f5f3ff,#ede9fe); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 28px; }
-  .news-body { flex: 1; min-width: 0; }
-  .news-title { font-size: 13px; font-weight: 700; line-height: 1.4; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-  .news-meta { font-size: 11px; color: #aaa; }
-  .news-source { display: inline-block; background: #f5f3ff; color: #7c3aed; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 6px; margin-bottom: 4px; }
-
   /* Video cards */
   .video-card { background: white; border-radius: 14px; overflow: hidden; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(124,58,237,0.07); }
   .video-card-head { padding: 12px 14px 6px; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
@@ -299,8 +290,7 @@
     <button class="tab" onclick="showTab('steps', this)">🚶 Ходьба</button>
     <button class="tab" onclick="showTab('weight', this)">⚖️ Вес</button>
     <button class="tab" onclick="showTab('videos', this)">🎬 Видео</button>
-    <button class="tab" onclick="showTab('news', this)">🌟 Интересное</button>
-    <button class="tab" onclick="showTab('progress', this)">📊 Прогресс</button>
+<button class="tab" onclick="showTab('progress', this)">📊 Прогресс</button>
     <button class="tab" onclick="showTab('settings', this)">⚙️ Данные</button>
   </div>
 </header>
@@ -518,18 +508,6 @@
       </div>
     </div>
     <div id="videos-list"></div>
-  </div>
-
-  <!-- ===== NEWS / ИНТЕРЕСНОЕ ===== -->
-  <div id="tab-news" class="section">
-    <br>
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-        <div style="font-size:15px;font-weight:800;color:#1a1a2e">🌟 Интересное в фитнесе</div>
-        <button class="btn btn-link" onclick="loadNews()" style="font-size:12px">🔄 Обновить</button>
-      </div>
-      <div id="news-list"><div class="empty"><div class="empty-icon">📰</div><p>Загрузка новостей...</p></div></div>
-    </div>
   </div>
 
   <!-- ===== SETTINGS / DATA ===== -->
@@ -2385,70 +2363,6 @@ function renderVideos() {
   }).join('');
 }
 
-// ─── News ─────────────────────────────────────────────────────────────────────
-const NEWS_FEEDS = [
-  { url: 'https://www.nerdfitness.com/feed/',        label: 'Nerd Fitness',   emoji: '💪' },
-  { url: 'https://www.verywellfit.com/feed',          label: 'Verywell Fit',   emoji: '🏃‍♀️' },
-  { url: 'https://healthyeater.com/feed',             label: 'Healthy Eater',  emoji: '🥗' },
-  { url: 'https://blog.myfitnesspal.com/feed/',       label: 'MyFitnessPal',   emoji: '🌿' },
-];
-
-async function fetchRSS(feedUrl) {
-  const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(feedUrl)}`;
-  const resp = await fetch(proxy);
-  const data = await resp.json();
-  const xml  = new DOMParser().parseFromString(data.contents, 'text/xml');
-  const items = [...xml.querySelectorAll('item')].slice(0, 5);
-  return items.map(el => {
-    const get  = tag => el.querySelector(tag)?.textContent?.trim() || '';
-    const img  = el.querySelector('enclosure[type^="image"]')?.getAttribute('url')
-              || el.querySelector('media\\:thumbnail, thumbnail')?.getAttribute('url')
-              || (get('description').match(/<img[^>]+src="([^"]+)"/)||[])[1] || '';
-    return {
-      title:   get('title'),
-      link:    get('link') || el.querySelector('link')?.nextSibling?.nodeValue?.trim() || '',
-      pubDate: get('pubDate'),
-      img,
-    };
-  });
-}
-
-async function loadNews() {
-  const container = document.getElementById('news-list');
-  if (!container) return;
-  container.innerHTML = `<div class="empty"><div class="empty-icon">⏳</div><p>Загружаем новости...</p></div>`;
-
-  const allItems = [];
-  await Promise.all(NEWS_FEEDS.map(async feed => {
-    try {
-      const items = await fetchRSS(feed.url);
-      items.forEach(item => allItems.push({ ...item, _source: feed.label, _emoji: feed.emoji }));
-    } catch(e) {}
-  }));
-
-  if (!allItems.length) {
-    container.innerHTML = `<div class="empty"><div class="empty-icon">📡</div><p>Не удалось загрузить новости.<br>Проверь интернет и попробуй обновить.</p></div>`;
-    return;
-  }
-
-  allItems.sort((a,b) => new Date(b.pubDate) - new Date(a.pubDate));
-  container.innerHTML = allItems.slice(0, 15).map(item => {
-    const date = item.pubDate
-      ? new Date(item.pubDate).toLocaleDateString('ru-RU', { day:'numeric', month:'long' }) : '';
-    const thumbEl = item.img
-      ? `<img class="news-thumb" src="${escHtml(item.img)}" onerror="this.outerHTML='<div class=\\'news-thumb\\'>${item._emoji}</div>'" loading="lazy" />`
-      : `<div class="news-thumb">${item._emoji}</div>`;
-    return `<a class="news-card" href="${escHtml(item.link)}" target="_blank" rel="noopener">
-      ${thumbEl}
-      <div class="news-body">
-        <div class="news-source">${item._source}</div>
-        <div class="news-title">${escHtml(item.title)}</div>
-        <div class="news-meta">${date}</div>
-      </div>
-    </a>`;
-  }).join('');
-}
-
 // ─── Tab switching ───────────────────────────────────────────────────────────
 function showTab(name, tabEl) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -2460,7 +2374,6 @@ function showTab(name, tabEl) {
   if (name === 'weight')   renderWeight();
   if (name === 'progress') renderProgress();
   if (name === 'videos')   renderVideos();
-  if (name === 'news')     loadNews();
   if (name === 'settings') document.getElementById('import-status').textContent = '';
 }
 
