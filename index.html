@@ -2387,35 +2387,56 @@ function renderVideos() {
 
 // ─── News ─────────────────────────────────────────────────────────────────────
 const NEWS_FEEDS = [
-  { url: 'https://www.womenshealthmag.com/rss/all.xml/', label: 'Women\'s Health', emoji: '💪' },
-  { url: 'https://www.self.com/feed/rss', label: 'Self', emoji: '🌿' },
-  { url: 'https://www.shape.com/feeds/all/rss.xml', label: 'Shape', emoji: '✨' },
+  { url: 'https://www.nerdfitness.com/feed/',        label: 'Nerd Fitness',   emoji: '💪' },
+  { url: 'https://www.verywellfit.com/feed',          label: 'Verywell Fit',   emoji: '🏃‍♀️' },
+  { url: 'https://healthyeater.com/feed',             label: 'Healthy Eater',  emoji: '🥗' },
+  { url: 'https://blog.myfitnesspal.com/feed/',       label: 'MyFitnessPal',   emoji: '🌿' },
 ];
+
+async function fetchRSS(feedUrl) {
+  const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(feedUrl)}`;
+  const resp = await fetch(proxy);
+  const data = await resp.json();
+  const xml  = new DOMParser().parseFromString(data.contents, 'text/xml');
+  const items = [...xml.querySelectorAll('item')].slice(0, 5);
+  return items.map(el => {
+    const get  = tag => el.querySelector(tag)?.textContent?.trim() || '';
+    const img  = el.querySelector('enclosure[type^="image"]')?.getAttribute('url')
+              || el.querySelector('media\\:thumbnail, thumbnail')?.getAttribute('url')
+              || (get('description').match(/<img[^>]+src="([^"]+)"/)||[])[1] || '';
+    return {
+      title:   get('title'),
+      link:    get('link') || el.querySelector('link')?.nextSibling?.nodeValue?.trim() || '',
+      pubDate: get('pubDate'),
+      img,
+    };
+  });
+}
 
 async function loadNews() {
   const container = document.getElementById('news-list');
   if (!container) return;
   container.innerHTML = `<div class="empty"><div class="empty-icon">⏳</div><p>Загружаем новости...</p></div>`;
+
   const allItems = [];
   await Promise.all(NEWS_FEEDS.map(async feed => {
     try {
-      const resp = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}&count=5`);
-      const data = await resp.json();
-      if (data.items) {
-        data.items.forEach(item => allItems.push({ ...item, _source: feed.label, _emoji: feed.emoji }));
-      }
+      const items = await fetchRSS(feed.url);
+      items.forEach(item => allItems.push({ ...item, _source: feed.label, _emoji: feed.emoji }));
     } catch(e) {}
   }));
+
   if (!allItems.length) {
-    container.innerHTML = `<div class="empty"><div class="empty-icon">📡</div><p>Не удалось загрузить новости.<br>Проверь подключение к интернету.</p></div>`;
+    container.innerHTML = `<div class="empty"><div class="empty-icon">📡</div><p>Не удалось загрузить новости.<br>Проверь интернет и попробуй обновить.</p></div>`;
     return;
   }
+
   allItems.sort((a,b) => new Date(b.pubDate) - new Date(a.pubDate));
   container.innerHTML = allItems.slice(0, 15).map(item => {
-    const date = item.pubDate ? new Date(item.pubDate).toLocaleDateString('ru-RU', { day:'numeric', month:'long' }) : '';
-    const thumb = item.thumbnail || item.enclosure?.link || '';
-    const thumbEl = thumb
-      ? `<img class="news-thumb" src="${escHtml(thumb)}" onerror="this.style.display='none'" loading="lazy" />`
+    const date = item.pubDate
+      ? new Date(item.pubDate).toLocaleDateString('ru-RU', { day:'numeric', month:'long' }) : '';
+    const thumbEl = item.img
+      ? `<img class="news-thumb" src="${escHtml(item.img)}" onerror="this.outerHTML='<div class=\\'news-thumb\\'>${item._emoji}</div>'" loading="lazy" />`
       : `<div class="news-thumb">${item._emoji}</div>`;
     return `<a class="news-card" href="${escHtml(item.link)}" target="_blank" rel="noopener">
       ${thumbEl}
