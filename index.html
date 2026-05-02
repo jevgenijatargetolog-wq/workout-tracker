@@ -243,6 +243,28 @@
   .cal-detail-link { font-size: 12px; color: #7c3aed; font-weight: 600; text-decoration: none; }
   @keyframes calFadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
 
+  /* Spin wheel */
+  .spin-overlay { position: fixed; inset: 0; background: rgba(20,0,50,0.65); z-index: 700; display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeInBg 0.2s ease; }
+  @keyframes fadeInBg { from { opacity:0; } to { opacity:1; } }
+  .spin-box { background: white; border-radius: 24px; padding: 24px 20px 28px; max-width: 360px; width: 100%; text-align: center; position: relative; }
+  .spin-title { font-size: 18px; font-weight: 800; color: #1a1a2e; margin-bottom: 18px; }
+  .spin-close { position: absolute; top: 16px; right: 16px; background: #f3f4f6; border: none; border-radius: 50%; width: 32px; height: 32px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .spin-wrap { position: relative; display: inline-block; }
+  .spin-pointer { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-top: 22px solid #7c3aed; z-index: 2; filter: drop-shadow(0 2px 4px rgba(124,58,237,0.4)); }
+  .spin-canvas { display: block; border-radius: 50%; box-shadow: 0 4px 24px rgba(124,58,237,0.18); }
+  .spin-btn { margin-top: 20px; width: 100%; padding: 14px; background: linear-gradient(135deg,#7c3aed,#a855f7); color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 800; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; box-shadow: 0 4px 14px rgba(124,58,237,0.35); }
+  .spin-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(124,58,237,0.45); }
+  .spin-btn:active { transform: scale(0.97); }
+  .spin-btn:disabled { opacity: 0.5; cursor: default; transform: none; }
+  .spin-result { margin-top: 18px; padding: 16px; border-radius: 16px; animation: spinResultIn 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+  @keyframes spinResultIn { from { opacity:0; transform:scale(0.7); } to { opacity:1; transform:scale(1); } }
+  .spin-result-icon { font-size: 36px; margin-bottom: 6px; }
+  .spin-result-name { font-size: 16px; font-weight: 800; color: #1a1a2e; margin-bottom: 4px; }
+  .spin-result-cat { font-size: 12px; color: #888; margin-bottom: 12px; }
+  .spin-wheel-btn { display: inline-block; background: #7c3aed; color: white; border: none; border-radius: 10px; padding: 8px 18px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; }
+  .open-spin-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 13px; background: linear-gradient(135deg,#f5f3ff,#ede9fe); border: 2px solid #c4b5fd; border-radius: 16px; color: #7c3aed; font-size: 15px; font-weight: 700; cursor: pointer; margin-bottom: 14px; transition: all 0.2s; }
+  .open-spin-btn:hover { background: linear-gradient(135deg,#ede9fe,#ddd6fe); border-color: #7c3aed; }
+
   @media (max-width: 420px) {
     .form-row { grid-template-columns: 1fr; }
     .stats-row { gap: 7px; }
@@ -289,6 +311,7 @@
   <div id="tab-workouts" class="section active">
     <br>
     <div id="coach-workouts"></div>
+    <button class="open-spin-btn" onclick="openSpinWheel()">🎲 <span>Крутить колесо</span></button>
     <button class="toggle-form-btn" onclick="toggleAddForm()" id="toggle-btn">+ Добавить тренировку</button>
     <div id="add-form" style="display:none">
       <div class="form-card">
@@ -541,6 +564,20 @@
   </div>
 
 </main>
+
+<!-- Spin wheel modal -->
+<div id="spin-overlay" class="spin-overlay" style="display:none" onclick="if(event.target===this)closeSpinWheel()">
+  <div class="spin-box">
+    <button class="spin-close" onclick="closeSpinWheel()">✕</button>
+    <div class="spin-title">🎲 Тренировка дня</div>
+    <div class="spin-wrap">
+      <div class="spin-pointer"></div>
+      <canvas id="spin-canvas" class="spin-canvas" width="300" height="300"></canvas>
+    </div>
+    <button class="spin-btn" id="spin-btn" onclick="spinWheel()">Крутить!</button>
+    <div id="spin-result"></div>
+  </div>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
@@ -2408,6 +2445,138 @@ function renderCalDetail(dateStr, workouts) {
     </div>`;
   }).join('');
   detail.innerHTML = `<div class="cal-detail"><div class="cal-detail-title">📅 ${fmt}</div>${rows}</div>`;
+}
+
+// ─── Spin Wheel ──────────────────────────────────────────────────────────────
+let _spinAngle    = 0;
+let _spinSpeed    = 0;
+let _spinTarget   = 0;
+let _spinRaf      = null;
+let _spinWorkouts = [];
+
+function openSpinWheel() {
+  const d = initData();
+  _spinWorkouts = d.workouts;
+  if (!_spinWorkouts.length) {
+    alert('Сначала добавь тренировки!');
+    return;
+  }
+  document.getElementById('spin-result').innerHTML = '';
+  document.getElementById('spin-btn').disabled = false;
+  document.getElementById('spin-btn').textContent = 'Крутить!';
+  document.getElementById('spin-overlay').style.display = 'flex';
+  _spinAngle = 0;
+  drawWheel(_spinAngle);
+}
+
+function closeSpinWheel() {
+  if (_spinRaf) { cancelAnimationFrame(_spinRaf); _spinRaf = null; }
+  document.getElementById('spin-overlay').style.display = 'none';
+}
+
+function drawWheel(angle) {
+  const canvas = document.getElementById('spin-canvas');
+  const ctx    = canvas.getContext('2d');
+  const cx = canvas.width  / 2;
+  const cy = canvas.height / 2;
+  const r  = cx - 4;
+  const n  = _spinWorkouts.length;
+  const arc = (2 * Math.PI) / n;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  _spinWorkouts.forEach((w, i) => {
+    const cat   = WORKOUT_CATS.find(c => c.id === (w.category || w.type)) || WORKOUT_CATS[0];
+    const start = angle + i * arc - Math.PI / 2;
+    const end   = start + arc;
+
+    // Segment
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, start, end);
+    ctx.closePath();
+    ctx.fillStyle = i % 2 === 0 ? cat.border : cat.bg || '#ede9fe';
+    ctx.fill();
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Label
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(start + arc / 2);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#1a1a2e';
+    ctx.font = `bold ${n > 12 ? 9 : n > 8 ? 10 : 12}px -apple-system, sans-serif`;
+    const label = w.name.length > 16 ? w.name.slice(0, 15) + '…' : w.name;
+    ctx.fillText(label, r - 10, 4);
+    ctx.restore();
+  });
+
+  // Center circle
+  ctx.beginPath();
+  ctx.arc(cx, cy, 22, 0, 2 * Math.PI);
+  ctx.fillStyle = 'white';
+  ctx.fill();
+  ctx.strokeStyle = '#7c3aed';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // Center emoji
+  ctx.font = '18px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🎲', cx, cy);
+}
+
+function spinWheel() {
+  if (_spinRaf) return;
+  document.getElementById('spin-result').innerHTML = '';
+  document.getElementById('spin-btn').disabled = true;
+
+  // Pick target: random extra rotations + land on random segment
+  const winner   = Math.floor(Math.random() * _spinWorkouts.length);
+  const n        = _spinWorkouts.length;
+  const arc      = (2 * Math.PI) / n;
+  // We want the pointer (top) to point to winner segment center
+  const targetAngle = -(winner * arc + arc / 2) + (Math.random() * arc * 0.6 - arc * 0.3);
+  const extraSpins  = (5 + Math.floor(Math.random() * 4)) * 2 * Math.PI;
+  _spinTarget = targetAngle - _spinAngle + extraSpins;
+  _spinSpeed  = _spinTarget / 120; // distribute over ~120 frames initially
+
+  let traveled = 0;
+  function frame() {
+    _spinSpeed *= 0.975;
+    if (_spinSpeed < 0.003) {
+      _spinAngle += (_spinTarget - traveled);
+      drawWheel(_spinAngle);
+      showSpinResult(winner);
+      _spinRaf = null;
+      return;
+    }
+    traveled   += _spinSpeed;
+    _spinAngle += _spinSpeed;
+    drawWheel(_spinAngle);
+    _spinRaf = requestAnimationFrame(frame);
+  }
+  _spinRaf = requestAnimationFrame(frame);
+}
+
+function showSpinResult(winnerIdx) {
+  const w   = _spinWorkouts[winnerIdx];
+  const cat = WORKOUT_CATS.find(c => c.id === (w.category || w.type)) || WORKOUT_CATS[0];
+  const link = w.url
+    ? `<a href="${escHtml(w.url)}" target="_blank" class="spin-wheel-btn">▶ Открыть тренировку</a>`
+    : '';
+  document.getElementById('spin-result').innerHTML = `
+    <div class="spin-result" style="background:${cat.bg};border:2px solid ${cat.border}">
+      <div class="spin-result-icon">${cat.icon}</div>
+      <div class="spin-result-name">${escHtml(w.name)}</div>
+      <div class="spin-result-cat">${cat.label}${w.duration ? ' · ' + w.duration + ' мин' : ''}</div>
+      ${link}
+    </div>`;
+  const btn = document.getElementById('spin-btn');
+  btn.disabled = false;
+  btn.textContent = '🔄 Крутить ещё';
 }
 
 // ─── PWA Service Worker ──────────────────────────────────────────────────────
