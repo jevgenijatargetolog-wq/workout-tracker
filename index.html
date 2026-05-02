@@ -534,6 +534,13 @@
   <!-- ===== SETTINGS / DATA ===== -->
   <div id="tab-settings" class="section">
     <br>
+    <div class="card" style="border:1.5px solid #fde68a;background:#fffbeb">
+      <div style="font-size:15px;font-weight:700;margin-bottom:6px">🔄 Восстановить тренировки</div>
+      <div style="font-size:13px;color:#888;margin-bottom:14px;line-height:1.5">Если тренировки пропали — нажми эту кнопку. Приложение найдёт все старые данные и восстановит их.</div>
+      <button class="btn btn-primary" style="width:100%;background:#f59e0b" onclick="restoreOldData()">🔄 Восстановить данные</button>
+      <div id="restore-status" style="margin-top:10px;font-size:13px;text-align:center"></div>
+    </div>
+
     <div class="card">
       <div style="font-size:15px;font-weight:700;margin-bottom:6px">💾 Резервная копия</div>
       <div style="font-size:13px;color:#888;margin-bottom:14px;line-height:1.5">Сохраните все свои данные в файл и загрузите их на другом устройстве (планшет, телефон).</div>
@@ -2220,6 +2227,76 @@ function importData(event) {
     }
   };
   reader.readAsText(file);
+}
+
+function restoreOldData() {
+  const status = document.getElementById('restore-status');
+  status.innerHTML = '<span style="color:#888">⏳ Ищем данные...</span>';
+
+  // Try every possible old path
+  const paths = ['data', 'users/Женя', 'users/Jevgenija', 'users/jevgenija', 'users/Евгения'];
+
+  Promise.all(paths.map(p => db.ref(p).once('value').then(s => ({ path: p, val: s.val() }))))
+    .then(results => {
+      // Find the one with most workouts
+      let best = null;
+      results.forEach(r => {
+        if (r.val && r.val.workouts && r.val.workouts.length > 0) {
+          if (!best || r.val.workouts.length > best.val.workouts.length) best = r;
+        }
+      });
+
+      if (!best) {
+        // Check all users/ children
+        db.ref('users').once('value', snap => {
+          const usersData = snap.val();
+          if (!usersData) {
+            status.innerHTML = '<span style="color:#ef4444">❌ Данные не найдены. Используй резервную копию ниже.</span>';
+            return;
+          }
+          let bestUser = null, bestCount = 0;
+          Object.entries(usersData).forEach(([name, val]) => {
+            if (val && val.workouts && val.workouts.length > bestCount) {
+              bestCount = val.workouts.length;
+              bestUser = { path: 'users/' + name, val };
+            }
+          });
+          if (bestUser) applyRestoredData(bestUser.val, bestUser.path, status);
+          else status.innerHTML = '<span style="color:#ef4444">❌ Данные не найдены. Используй резервную копию ниже.</span>';
+        });
+        return;
+      }
+      applyRestoredData(best.val, best.path, status);
+    });
+}
+
+function applyRestoredData(oldData, fromPath, status) {
+  const current = initData();
+  // Merge: add workouts not already present
+  const existingIds = new Set(current.workouts.map(w => w.id));
+  let added = 0;
+  (oldData.workouts || []).forEach(w => {
+    if (!existingIds.has(w.id)) { current.workouts.push(w); added++; }
+  });
+  // Merge completions
+  const existingComps = new Set(current.completions.map(c => c.workoutId + c.date));
+  (oldData.completions || []).forEach(c => {
+    if (!existingComps.has(c.workoutId + c.date)) current.completions.push(c);
+  });
+  // Merge recipes
+  const existingRecipeIds = new Set(current.recipes.map(r => r.id));
+  (oldData.recipes || []).forEach(r => {
+    if (!existingRecipeIds.has(r.id)) current.recipes.push(r);
+  });
+  // Merge steps, weight
+  const existingStepDates = new Set(current.steps.map(s => s.date));
+  (oldData.steps || []).forEach(s => { if (!existingStepDates.has(s.date)) current.steps.push(s); });
+  const existingWDates = new Set((current.weight||[]).map(w => w.date));
+  (oldData.weight || []).forEach(w => { if (!existingWDates.has(w.date)) current.weight.push(w); });
+
+  setData(current);
+  renderWorkouts();
+  status.innerHTML = `<span style="color:#10b981">✓ Найдено из "${fromPath}": восстановлено ${added} тренировок!</span>`;
 }
 
 function clearAllData() {
